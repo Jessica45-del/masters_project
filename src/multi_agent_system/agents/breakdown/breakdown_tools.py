@@ -2,6 +2,7 @@ from pathlib import Path
 import json, re
 from jinja2 import Environment, FileSystemLoader
 from multi_agent_system.agents.breakdown.breakdown_config import BreakdownAgentConfig
+from multi_agent_system.agents.breakdown.shared_dependencies import model, config
 
 # Load configuration & template once
 defaults = BreakdownAgentConfig()
@@ -32,7 +33,7 @@ def render_prompt(hpo_ids: list[str]) -> str:
 
 
 def call_model(prompt: str) -> str:
-    """Step 5: Invoke Deepseek via the pydantic-ai model."""
+    """Invoke Deepseek via the pydantic-ai model."""
     return model.complete(
         prompt=prompt,
         max_tokens=config.max_tokens,
@@ -46,3 +47,14 @@ def parse_deepseek_response(content: str) -> list[dict]:
     if not m:
         raise ValueError("Expected JSON block in ```json ... ```")
     return json.loads(m.group(1))
+
+
+
+def save_result(parsed: list[dict], input_path: str) -> str:
+    """Save parsed output to initial_diagnosis/<filename>_diagnosis.json."""
+    out_dir = defaults.output_dir
+    out_dir.mkdir(exist_ok=True)
+    base = Path(input_path).stem
+    out_path = out_dir / f"{base}_diagnosis.json"
+    out_path.write_text(json.dumps(parsed, indent=2), encoding="utf-8")
+    return str(out_path)

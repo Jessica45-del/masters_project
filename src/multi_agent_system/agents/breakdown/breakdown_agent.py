@@ -5,24 +5,24 @@ Agent 1 : Breakdown Agent
 - Returns a summary of clinical context:
     - HPO term → systems affected → initial candidate disease(s)
 # """
-from pydantic_ai.providers.deepseek import DeepSeekProvider
-from pydantic_ai.models.openai import OpenAIModel
-from pydantic_ai import Agent, RunContext
 
-from multi_agent_system.agents.breakdown.breakdown_config import BreakdownAgentConfig
+from pydantic_ai import Agent
+from multi_agent_system.agents.breakdown.shared_dependencies import model
 from multi_agent_system.agents.breakdown.breakdown_tools import (
     list_phenopacket_files,
     load_phenopacket,
     extract_hpo_ids,
     render_prompt,
     call_model,
-    parse_deepseek_response
+    parse_deepseek_response, save_result
 )
+# breakdown_agent.py
+from multi_agent_system.agents.breakdown.shared_dependencies import model
 
-cfg = BreakdownAgentConfig()
+
 
 # System prompt
-SYSTEM_PROMPT = (
+BREAKDOWN_SYSTEM_PROMPT = (
     "You are an expert phenopacket diagnostic assistant."
     "Your role is to analyse clinical data from patient phenopackets."
     "When given a directory of phenopacket JSONs, follow these steps:"
@@ -35,38 +35,35 @@ SYSTEM_PROMPT = (
     "Return the parsed diagnostics as JSON format ."
 )
 
-#Intialise deepseek model and deepseek provider
-model = OpenAIModel(
-    'deepseek-chat',
-    provider=DeepSeekProvider(api_key=cfg.api_key),
-)
-
 # Create breakdown agent
 breakdown_agent = Agent(
-    model="deepseek-r1",
-    system_prompt=SYSTEM_PROMPT
+    model= model,
+    system_prompt=BREAKDOWN_SYSTEM_PROMPT
 )
 
 # Register tools
-breakdown_agent.tool(list_phenopacket_files)
-breakdown_agent.tool(load_phenopacket)
-breakdown_agent.tool(extract_hpo_ids)
-breakdown_agent.tool(render_prompt)
+breakdown_agent.tool_plain(list_phenopacket_files)
+breakdown_agent.tool_plain(load_phenopacket)
+breakdown_agent.tool_plain(extract_hpo_ids)
+breakdown_agent.tool_plain(render_prompt)
 breakdown_agent.tool_plain(call_model) #deepseek
-breakdown_agent.tool(parse_deepseek_response)
+breakdown_agent.tool_plain(parse_deepseek_response)
 
 # Top-level planner that composes all steps
 @breakdown_agent.tool_plain
-def extract_phenopacket_pipeline(ctx:RunContext[BreakdownAgentConfig], dir_path:str) -> list[dict]:
+def extract_phenopacket_pipeline(dir_path: str) -> list[str]:
     files = list_phenopacket_files(dir_path)
-    results = []
+    saved: list[str] = []
     for fp in files:
         pkt    = load_phenopacket(fp)
         ids    = extract_hpo_ids(pkt)
         prompt = render_prompt(ids)
         raw    = call_model(prompt)
         parsed = parse_deepseek_response(raw)
-        results.extend(parsed)
-    return results
+        path   = save_result(parsed, fp)
+        saved.append(path)
+    return saved
 
 
+
+# def extract_phenopacket_pipeline(ctx:RunContext[BreakdownAgentConfig], dir_path:str) -> list[dict]:
