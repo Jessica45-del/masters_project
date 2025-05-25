@@ -1,0 +1,24 @@
+A clinician observed the following phenotypes in a patient:
+{{ hpo_terms }}
+
+What gene is causing the observed phenotypes in the patient?
+Provide a ranked list of candidate genes with associated likelihood scores.
+
+Please return your answer **only as a JSON array**, enclosed **in a code block** with the language identifier `json`.
+Do **not** include any explanation, markdown, or additional text.
+Provide a score that is the reciprocal of the rank (1/rank)
+
+The output must exactly match this format:
+
+```json
+[
+  {
+    "gene_symbol": "<GENE_SYMBOL>",
+    "score": 0.9
+  },
+  {
+    "gene_symbol": "<GENE_SYMBOL>",
+    "score": 0.8
+  }
+]
+```

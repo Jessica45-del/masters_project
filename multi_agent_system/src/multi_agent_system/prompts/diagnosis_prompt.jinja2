@@ -1,0 +1,40 @@
+You are a clinical geneticist assisting with rare disease diagnosis.
+
+The patient presents with the following metadata:
+- Sex: {{ sex }}
+- PMID ID: {{ id }}
+
+Observed phenotypic abnormalities (HPO terms):
+{{ hpo_terms }}
+
+#### Instructions ####
+1. For each phenotype, list:
+   - HPO ID
+   - Phenotype label
+   - Affected system or organ category
+
+2. Based on the phenotype combination, suggest 1–3 initial candidate diseases by name only. **Do not return MONDO IDs**.
+
+#### Output Format ####
+Return a single JSON object enclosed in a code block labeled `json`. Do **not** include any extra explanation, markdown, or commentary.
+
+Output must exactly match this structure:
+```json
+{
+  "phenotypes": [
+    {
+      "id": "HP:0004322",
+      "label": "Arachnodactyly",
+      "system": "Musculoskeletal system"
+    },
+    {
+      "id": "HP:0001156",
+      "label": "Joint hypermobility",
+      "system": "Musculoskeletal system"
+    }
+  ],
+  "candidate_diseases": [
+    "Marfan syndrome",
+    "Loeys-Dietz syndrome"
+  ]
+}
