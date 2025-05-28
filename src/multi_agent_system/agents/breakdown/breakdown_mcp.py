@@ -1,6 +1,6 @@
 # MCP Layer to interact externally
 
-from pydantic_ai.mcp import FastMCP
+#from pydantic_ai.mcp import FastMCP
 from mcp.server.fastmcp import FastMCP
 from multi_agent_system.agents.breakdown.breakdown_agent import BREAKDOWN_SYSTEM_PROMPT, extract_phenopacket_pipeline
 

@@ -27,9 +27,12 @@ def extract_hpo_ids(phenopacket: dict) -> list[str]:
     return [feat["type"]["id"] for feat in features if feat.get("type", {}).get("id")]
 
 
-def render_prompt(hpo_ids: list[str]) -> str:
-    """Insert (Render) the Jinja2 prompt (template) HPO terms."""
-    return _template.render(hpo_terms=", ".join(hpo_ids))
+def render_prompt(hpo_ids: list[str], sex: str, pkt_id: str) -> str: #pkt_id = phenopacket(patient id)
+    return _template.render(
+        hpo_terms=", ".join(hpo_ids),
+        sex=sex,
+        id=pkt_id
+    )
 
 
 def call_model(prompt: str) -> str:

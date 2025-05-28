@@ -45,7 +45,6 @@ breakdown_agent = Agent(
 breakdown_agent.tool_plain(list_phenopacket_files)
 breakdown_agent.tool_plain(load_phenopacket)
 breakdown_agent.tool_plain(extract_hpo_ids)
-breakdown_agent.tool_plain(render_prompt)
 breakdown_agent.tool_plain(call_model) #deepseek
 breakdown_agent.tool_plain(parse_deepseek_response)
 
@@ -55,9 +54,11 @@ def extract_phenopacket_pipeline(dir_path: str) -> list[str]:
     files = list_phenopacket_files(dir_path)
     saved: list[str] = []
     for fp in files:
-        pkt    = load_phenopacket(fp)
-        ids    = extract_hpo_ids(pkt)
-        prompt = render_prompt(ids)
+        pkt    = load_phenopacket(fp) # Load phenopacket into Python Dict
+        ids    = extract_hpo_ids(pkt) # extract HPO term IDs
+        sex = pkt.get("subject", {}).get("sex", "UNKNOWN") #get sex from phenopacket
+        pkt_id = pkt.get("id", "unknown-id") # get phenopacket ID (PMID if it exists)
+        prompt = render_prompt(ids, sex, pkt_id)
         raw    = call_model(prompt)
         parsed = parse_deepseek_response(raw)
         path   = save_result(parsed, fp)
@@ -66,4 +67,3 @@ def extract_phenopacket_pipeline(dir_path: str) -> list[str]:
 
 
 
-# def extract_phenopacket_pipeline(ctx:RunContext[BreakdownAgentConfig], dir_path:str) -> list[dict]:
