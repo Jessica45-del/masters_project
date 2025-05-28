@@ -1,4 +1,5 @@
-from pydantic import BaseSettings, Field, SettingsConfigDict
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
 class BreakdownAgentConfig(BaseSettings):
@@ -10,7 +11,7 @@ class BreakdownAgentConfig(BaseSettings):
     api_key: str         = Field(alias="DEEPSEEK_API_KEY")
 
     # Jinja2 template for prompts
-    template_dir: Path   = Field(Path("prompts"))
+    template_dir: Path   = Field(Path("src/multi_agent_system/prompts"))
     template_file: str   = Field("diagnosis_prompt.jinja2")
 
     # Output directory for initial diagnoses
@@ -21,3 +22,6 @@ class BreakdownAgentConfig(BaseSettings):
         env_prefix="",
         populate_by_name=True,
     )
+
+def get_config():
+    return BreakdownAgentConfig()
