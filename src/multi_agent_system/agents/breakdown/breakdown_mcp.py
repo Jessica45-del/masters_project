@@ -16,13 +16,13 @@ mcp = FastMCP("breakdown", instructions=BREAKDOWN_SYSTEM_PROMPT) #breakdown agen
 @mcp.tool()
 async def get_phenopacket_files(phenopacket_dir: str) -> list[str]:
    """
-   Find phenopacket files in the phenopacket directory and return file paths
+   Find phenopacket files in the phenopacket directory and return file paths.
 
    Args:
-   phenopacket_dir: Phenopacket directory
+      phenopacket_dir: Phenopacket directory
 
    Returns:
-   list of phenopacket file paths
+      List of phenopacket file paths
 
    """
    return await list_phenopacket_files(phenopacket_dir)
@@ -35,10 +35,10 @@ async def construct_diagnosis_prompt(file_path: str) -> tuple[str, str]:
    from the phenopacket file.
 
    Args:
-   file_path: Phenopacket file path
+      file_path: Phenopacket file path
 
    Returns:
-   Newly constructed diagnosis prompt and phenopacket file name
+      Newly constructed diagnosis prompt and phenopacket file name
    """
    return await prepare_prompt(file_path)
 
@@ -46,7 +46,7 @@ async def construct_diagnosis_prompt(file_path: str) -> tuple[str, str]:
 @mcp.tool()
 async def get_json_block(text:str) -> list[dict]:
    """
-   Extract JSON block from text and return it as a list
+   Extract JSON block from text and return it as a list.
 
    Args:
        text: JSON text block from deepseek model output
@@ -60,7 +60,7 @@ async def get_json_block(text:str) -> list[dict]:
 @mcp.tool()
 async def save_results(data:list[dict], name: str) -> Path:
    """
-   Save results to JSON file to initial_diagnosis directory located in the results directory
+   Save results in JSON file to initial_diagnosis directory located in the results directory
 
    Args:
        data: The response from deepseek in JSON format
