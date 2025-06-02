@@ -1,5 +1,4 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
+from pydantic import BaseSettings, Field, SettingsConfigDict
 from pathlib import Path
 
 class BreakdownAgentConfig(BaseSettings):
@@ -8,7 +7,7 @@ class BreakdownAgentConfig(BaseSettings):
     model_name: str      = Field("deepseek-r1")
     max_tokens: int      = Field(256)
     temperature: float   = Field(0.3)
-    api_key: str         = Field(default ="",alias="DEEPSEEK_API_KEY")
+    api_key: str         = Field(alias="DEEPSEEK_API_KEY")
 
     # Jinja2 template for prompts
     template_dir: Path   = Field(Path("prompts"))
@@ -19,12 +18,7 @@ class BreakdownAgentConfig(BaseSettings):
     initial_diagnosis_subdir: str = Field("initial_diagnosis")
 
 
-# avoids hardcoding output directory
-    @property
-    def output_dir(self) -> Path:
-        return self.results_dir / self.initial_diagnosis_subdir
-
-
+    # Pydantic v2 settings: no .env file, use direct env var names if set
     model_config = SettingsConfigDict(
         env_prefix="",
         populate_by_name=True,
