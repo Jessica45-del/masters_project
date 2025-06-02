@@ -1,38 +1,38 @@
 """
-Agent 1 : Breakdown Agent
-- Reads phenopackets
-- Extracts HPO terms (ids) from phenopackets
-- Returns a summary of clinical context:
-    - HPO term → systems affected → initial candidate disease(s)
-# """
-
+Agent for performing diagnostic reasoning
+"""
+from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.providers.deepseek import DeepSeekProvider
 from pydantic_ai import Agent
-from multi_agent_system.agents.breakdown.shared_dependencies import model
+
+from multi_agent_system.agents.breakdown.breakdown_config import get_config
 from multi_agent_system.agents.breakdown.breakdown_tools import (
     list_phenopacket_files,
-    load_phenopacket,
-    extract_hpo_ids,
-    render_prompt,
-    call_model,
-    parse_deepseek_response, save_result
+    prepare_prompt,
+    extract_json_block,
+    save_breakdown_result
 )
-# breakdown_agent.py
-from multi_agent_system.agents.breakdown.shared_dependencies import model
 
+config = get_config()
+
+#Define LLM model
+model = OpenAIModel(
+    "deepseek-chat",
+    provider=DeepSeekProvider(api_key=config.api_key),
+)
 
 
 # System prompt
 BREAKDOWN_SYSTEM_PROMPT = (
-    "You are an expert phenopacket diagnostic assistant."
+    "You are an expert diagnostic reasoning assistant."
     "Your role is to analyse clinical data from patient phenopackets."
-    "When given a directory of phenopacket JSONs, follow these steps:"
-    "1. list_phenopacket_files"
-    "2. load_phenopacket"
-    "3. extract_hpo_ids"
-    "4. render_prompt"
-    "5. call_deepseek" #change
-    "6. parse_deepseek_response"
-    "Return the parsed diagnostics as JSON format ."
+    "Your workflow is as follows:"
+    "1. List phenopacket files using list_phenopacket_file function"
+    "2. Load phenopackets and extract HPO ID/term, sex and PMID,"
+    "then insert into the prompt using prepare_prompt function"
+    "3. Extract the json block from model (deepseek) output using extract_json_block function."
+    "   If there is no JSON block return could not parse JSON"
+    "4. Save the results in the initial_diagnosis sub-directory in the results directory"
 )
 
 # Create breakdown agent
@@ -43,27 +43,13 @@ breakdown_agent = Agent(
 
 # Register tools
 breakdown_agent.tool_plain(list_phenopacket_files)
-breakdown_agent.tool_plain(load_phenopacket)
-breakdown_agent.tool_plain(extract_hpo_ids)
-breakdown_agent.tool_plain(call_model) #deepseek
-breakdown_agent.tool_plain(parse_deepseek_response)
+breakdown_agent.tool_plain(prepare_prompt)
+breakdown_agent.tool_plain(extract_json_block)
+breakdown_agent.tool_plain(save_breakdown_result)
 
-# Top-level planner that composes all steps
-@breakdown_agent.tool_plain
-def extract_phenopacket_pipeline(dir_path: str) -> list[str]:
-    files = list_phenopacket_files(dir_path)
-    saved: list[str] = []
-    for fp in files:
-        pkt    = load_phenopacket(fp) # Load phenopacket into Python Dict
-        ids    = extract_hpo_ids(pkt) # extract HPO term IDs
-        sex = pkt.get("subject", {}).get("sex", "UNKNOWN") #get sex from phenopacket
-        pkt_id = pkt.get("id", "unknown-id") # get phenopacket ID (PMID if it exists)
-        prompt = render_prompt(ids, sex, pkt_id)
-        raw    = call_model(prompt)
-        parsed = parse_deepseek_response(raw)
-        path   = save_result(parsed, fp)
-        saved.append(path)
-    return saved
+
+
+
 
 
 

@@ -23,7 +23,7 @@ GROUNDING_SYSTEM_PROMPT(
 
 
 grounding_agent = Agent(
-    model ="gpt-4",
+    model ="g",
     deps_type = GroundingDependencies,
     result_type=str, # or JSON?
     system_prompt=GROUNDING_SYSTEM_PROMPT
