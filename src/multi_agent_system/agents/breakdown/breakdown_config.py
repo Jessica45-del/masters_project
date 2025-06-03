@@ -1,10 +1,14 @@
+"""
+Configuration for Breakdown Agent
+"""
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 from pathlib import Path
 
 
 class BreakdownAgentConfig(BaseSettings):
-   """Holds all config settings for the Phenopacket Agent."""
+   """ Configuration settings for Breakdown Agent"""
    # Orchestration model (plan & tool dispatch)
    model_name: str      = Field("deepseek-r1")
    max_tokens: int      = Field(256)

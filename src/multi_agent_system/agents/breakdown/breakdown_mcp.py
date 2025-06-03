@@ -80,3 +80,9 @@ if __name__ == "__main__":
    # initialise and run the server
    mcp.run(transport="stdio") # serving layer
 
+
+async def test_pipeline():
+   files = await list_phenopacket_files("phenopackets/")
+   for fp in files:
+      prompt, name = await prepare_prompt(fp)
+      print(f"\n--- Prompt for {name} ---\n{prompt}\n")

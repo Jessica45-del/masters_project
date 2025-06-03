@@ -4,8 +4,6 @@ Agent for performing diagnostic reasoning
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
 from pydantic_ai import Agent
-
-
 from multi_agent_system.agents.breakdown.breakdown_config import get_config
 from multi_agent_system.agents.breakdown.breakdown_tools import (
    list_phenopacket_files,
