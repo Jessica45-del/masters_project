@@ -19,7 +19,7 @@ config = get_config()
 
 #Define LLM model
 model = OpenAIModel(
-   "deepseek-chat",
+   "deepseek-r1",
    provider=DeepSeekProvider(api_key=config.api_key),
 )
 
