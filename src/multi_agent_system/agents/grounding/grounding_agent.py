@@ -20,10 +20,11 @@ GROUNDING_SYSTEM_PROMPT(
     "You will perform this task by completing the following steps:"
     "1) Map HPO ID (terms) to MONDO disease IDs"
     "2) Retrieve disease knowledge using MONDO IDs "
+    "You will extract HPO terms from Breakdown Agent output using ...."
     "You will map the HPO ID (terms) to MONDO IDs by using the find_mondo_disease_id function"
     "and you will return as a list in JSON format"
     "You will retrieve disease knowledge using MONDO IDs by using the get_disease_profile function"
-    "and you will return as a list in JSON format"
+    "and you will return as as a list in JSON format"
     ""
 )
 
