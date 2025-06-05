@@ -17,15 +17,15 @@ _template = _jinja_env.get_template(cfg.template_file)
 
 
 async def list_phenopacket_files(phenopacket_dir: str) -> list[str]:
-   """Return all phenopacket files (.json) file paths in the phenopacket directory
+   """Return all phenopacket files (.json) file paths in the phenopackets directory
 
    Args:
    dir_path: Path to the phenopacket directory
 
    Returns:
-       Phenopacket files in phenopacket directory
+       Phenopacket files in (.json) in phenopackets directory
    """
-   print("Searching in phenopacket_dir:", Path(phenopacket_dir).resolve())
+   print(f"[DEBUG] List files called with: {phenopacket_dir}")
    return [str(p) for p in Path(phenopacket_dir).glob("*.json")]
 
 
@@ -35,7 +35,7 @@ async def prepare_prompt(file_path: str) -> tuple[str, str]:
    and render a prompt.
 
    Args:
-       file_path: Path to the phenopacket JSON file
+       file_path: Path to JSON files in the phenopackets directory
 
    Returns:
        The prompt and phenopacket file name .
@@ -46,13 +46,12 @@ async def prepare_prompt(file_path: str) -> tuple[str, str]:
    # Load phenopacket as an object
    phenopacket = phenopacket_reader(Path(file_path))
 
-
    # Extract HPO term IDs
    hpo_ids = [p.type.id for p in PhenopacketUtil(phenopacket).observed_phenotypic_features()]
 
-
    # Extract patient metadata
-   sex = phenopacket.subject.sex.value if phenopacket.subject and phenopacket.subject.sex else "UNKNOWN"
+   sex = phenopacket.subject.sex if phenopacket.subject and phenopacket.subject.sex else "UNKNOWN"
+
    pkt_id = phenopacket.id or "UNKNOWN"
 
 
@@ -62,7 +61,6 @@ async def prepare_prompt(file_path: str) -> tuple[str, str]:
        sex=sex,
        id=pkt_id
    )
-
 
    # Return the prompt and filename base (for saving results)
    return prompt, Path(file_path).stem
@@ -81,11 +79,12 @@ async def extract_json_block(text: str) -> list[dict]:
    match = re.search(r"```json\s*(\[\s*{.*?}\s*])\s*```", text, re.DOTALL)
    if match:
        try:
-           return json.loads(match.group(1))
-       except json.JSONDecodeError:
-           pass
+           parsed = json.loads(match.group(1))
+           if isinstance(parsed, list):
+               return parsed
+       except json.JSONDecodeError as e:
+           print(f"[DEBUG] JSON decode error: {e}")
    return [{"error": "Could not parse JSON"}, {"raw": text}]
-
 async def save_breakdown_result(data: list[dict], name: str) -> Path:
    """
    Save results to J

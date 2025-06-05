@@ -1,5 +1,5 @@
 """
-Agent for performing diagnostic reasoning
+Breakdown Agent for performing diagnostic reasoning
 """
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
@@ -17,7 +17,7 @@ config = get_config()
 
 #Define LLM model
 model = OpenAIModel(
-   "deepseek-r1",
+   "deepseek-chat",
    provider=DeepSeekProvider(api_key=config.api_key),
 )
 

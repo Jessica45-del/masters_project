@@ -10,14 +10,14 @@ from pathlib import Path
 class BreakdownAgentConfig(BaseSettings):
    """ Configuration settings for Breakdown Agent"""
    # Orchestration model (plan & tool dispatch)
-   model_name: str      = Field("deepseek-r1")
+   model_name: str      = Field("deepseek-chat")
    max_tokens: int      = Field(256)
-   temperature: float   = Field(0.3)
+   temperature: float   = Field(0.0)
    api_key: str         = Field(default ="",alias="DEEPSEEK_API_KEY")
 
 
    # Jinja2 template for prompts
-   template_dir: Path   = Field(Path("prompts"))
+   template_dir: Path   = Field(Path(__file__).parents[2] / "prompts") # move up two levels in the dir structure
    template_file: str   = Field("diagnosis_prompt.jinja2")
 
 
@@ -28,7 +28,7 @@ class BreakdownAgentConfig(BaseSettings):
 # avoids hardcoding output directory
    @property
    def output_dir(self) -> Path:
-       return self.results_dir / self.initial_output_subdir
+       return self.results_dir / self.initial_diagnosis_subdir
 
    model_config = SettingsConfigDict(
        env_prefix="",

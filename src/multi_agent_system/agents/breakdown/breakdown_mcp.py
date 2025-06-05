@@ -31,11 +31,11 @@ async def get_phenopacket_files(phenopacket_dir: str) -> list[str]:
 @mcp.tool()
 async def construct_diagnosis_prompt(file_path: str) -> tuple[str, str]:
    """
-   Prepare diagnosis prompt by extracting HPO ID and metadata (id and sex)
+   Prepare diagnosis prompt by extracting HPO ID and metadata (PMID and sex)
    from the phenopacket file.
 
    Args:
-      file_path: Phenopacket file path
+      file_path: file path to phenopackets JSON file in phenopackets directory
 
    Returns:
       Newly constructed diagnosis prompt and phenopacket file name
@@ -80,9 +80,3 @@ if __name__ == "__main__":
    # initialise and run the server
    mcp.run(transport="stdio") # serving layer
 
-
-async def test_pipeline():
-   files = await list_phenopacket_files("phenopackets/")
-   for fp in files:
-      prompt, name = await prepare_prompt(fp)
-      print(f"\n--- Prompt for {name} ---\n{prompt}\n")
