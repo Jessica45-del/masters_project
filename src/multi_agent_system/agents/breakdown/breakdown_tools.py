@@ -5,6 +5,7 @@ Tools for Breakdown Agent
 from pathlib import Path
 import json
 import re
+
 from jinja2 import Environment, FileSystemLoader
 from pheval.utils.phenopacket_utils import phenopacket_reader, PhenopacketUtil
 from multi_agent_system.agents.breakdown.breakdown_config import get_config
@@ -29,7 +30,7 @@ async def list_phenopacket_files(phenopacket_dir: str) -> list[str]:
    return [str(p) for p in Path(phenopacket_dir).glob("*.json")]
 
 
-async def prepare_prompt(file_path: str) -> tuple[str, str]:
+async def prepare_prompt(file_path: str) -> tuple[str, str]: # find a way to remove disease diagnosis from files before LLM sees it
    """
    Load a phenopackets, extract HPO ID  and metadata (sex and PMID)
    and render a prompt.
@@ -58,8 +59,7 @@ async def prepare_prompt(file_path: str) -> tuple[str, str]:
    # Render the template using your diagnosis prompt (global jinja template)
    prompt = _template.render(
        hpo_terms=", ".join(hpo_ids),
-       sex=sex,
-       id=pkt_id
+       sex=sex
    )
 
    # Return the prompt and filename base (for saving results)
@@ -85,9 +85,11 @@ async def extract_json_block(text: str) -> list[dict]:
        except json.JSONDecodeError as e:
            print(f"[DEBUG] JSON decode error: {e}")
    return [{"error": "Could not parse JSON"}, {"raw": text}]
+
+
 async def save_breakdown_result(data: list[dict], name: str) -> Path:
    """
-   Save results to J
+   Save results the results to
 
    Args:
        data: JSON response from deepseek model

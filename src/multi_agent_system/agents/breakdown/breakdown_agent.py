@@ -9,7 +9,7 @@ from multi_agent_system.agents.breakdown.breakdown_tools import (
    list_phenopacket_files,
    prepare_prompt,
    extract_json_block,
-   save_breakdown_result,
+   save_breakdown_result, #list_phenopacket_files,
 )
 
 config = get_config()
@@ -24,14 +24,25 @@ model = OpenAIModel(
 # System prompt
 BREAKDOWN_SYSTEM_PROMPT = (
    "You are an expert diagnostic reasoning assistant."
-   "Your role is to analyse clinical data from patient phenopackets."
-   "Your workflow is as follows:"
-   "1. List phenopacket files using list_phenopacket_file function"
-   "2. Load phenopackets and extract HPO ID/term, sex and PMID,"
-   "then insert into the prompt using prepare_prompt function"
-   "3. Extract the json block from model (deepseek) output using extract_json_block function."
-   "   If there is no JSON block return could not parse JSON"
-   "4. Save the results in the initial_diagnosis sub-directory in the results directory"
+   "You will be given a variable called `phenopacket_file`, which is the path to a single patient's phenopacket JSON file."
+   "Your role is to analyse clinical data from individual patient phenopacket files "
+   "to generate an initial diagnosis."
+   "You have access to a set of tools that enable you to complete this task step by step. "
+   "For each patient phenopacket, follow the workflow below:"
+   "1. Prepare the Diagnosis Prompt"
+   "Use the prepare_prompt tool to load a single phenopacket file"
+   "The tool will extract the patient's HPO terms and sex, and render the prompt template "
+   "with that information"
+   "2. Generate diagnostic reasoning output"
+   "Based on prepared_prompt function use Deepseek to generate a diagnostic analysis."
+   "Return your output as a JSON block containing the phenotypic labels, affected systems, and initial diagnosis "
+   "3.Extract the JSON output"
+   "Use the extract_json_block tool to extract the JSON portion of your output"
+   "If the JSON cannot be parsed, return your fallback response indicating that the JSON could not be parsed"
+   "4. Save the Initial Diagnosis Results "
+   "Use the save_breakdown_result tool to save the extracted JSON into the initial_diagnosis subdirectory within the "
+   "results directory."
+   "The filename should correspond to the original patient file "
 )
 
 # Create breakdown agent
@@ -40,7 +51,7 @@ breakdown_agent = Agent(
    system_prompt=BREAKDOWN_SYSTEM_PROMPT
 )
 
-# Register tools
+#Register tools
 breakdown_agent.tool_plain(list_phenopacket_files)
 breakdown_agent.tool_plain(prepare_prompt)
 breakdown_agent.tool_plain(extract_json_block)

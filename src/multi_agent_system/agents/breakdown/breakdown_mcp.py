@@ -13,19 +13,19 @@ from multi_agent_system.agents.breakdown.breakdown_tools import (
 
 mcp = FastMCP("breakdown", instructions=BREAKDOWN_SYSTEM_PROMPT) #breakdown agent and breakdown system prompt
 
-@mcp.tool()
-async def get_phenopacket_files(phenopacket_dir: str) -> list[str]:
-   """
-   Find phenopacket files in the phenopacket directory and return file paths.
-
-   Args:
-      phenopacket_dir: Phenopacket directory
-
-   Returns:
-      List of phenopacket file paths
-
-   """
-   return await list_phenopacket_files(phenopacket_dir)
+# @mcp.tool()
+# async def get_phenopacket_files(phenopacket_dir: str) -> list[str]:
+#    """
+#    Find phenopacket files in the phenopacket directory and return file paths.
+#
+#    Args:
+#       phenopacket_dir: Phenopacket directory
+#
+#    Returns:
+#       List of phenopacket file paths
+#
+#    """
+#    return await list_phenopacket_files(phenopacket_dir)
 
 
 @mcp.tool()
