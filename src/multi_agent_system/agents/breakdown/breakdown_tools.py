@@ -87,6 +87,7 @@ async def extract_json_block(text: str) -> list[dict]:
    return [{"error": "Could not parse JSON"}, {"raw": text}]
 
 
+
 async def save_breakdown_result(data: list[dict], name: str) -> Path:
    """
    Save results the results to
@@ -107,3 +108,19 @@ async def save_breakdown_result(data: list[dict], name: str) -> Path:
 
 
 
+# async def run_breakdown_pipeline(file_path: str) -> tuple[list[dict], str]:
+#     """
+#     Run the breakdown pipeline for one phenopacket.
+#
+#     Args:
+#         file_path: Path to JSON files in the phenopackets directory
+#
+#     Returns:
+#         Parsed diagnosis result and phenopacket file base name.
+#     """
+#     prompt, name = await prepare_prompt(file_path)
+#     print(f"[Breakdown] Prompt ready for: {name}")
+#     response = await model.complete(prompt=prompt)
+#     parsed = await extract_json_block(response)
+#     print(f"[Breakdown] Diagnosis complete for: {name}")
+#     return parsed, name
