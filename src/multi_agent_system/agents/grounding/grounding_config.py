@@ -1,28 +1,38 @@
 """
-Configuration for Grounding Agent.
+Configuration for the Grounding Agent using the SQLite MONDO adapter.
 """
-from dataclasses import dataclass
-from typing import Optional
-from pydantic import Field
+
 from pathlib import Path
-from oaklib.implementations import MonarchImplementation
+from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
+from oaklib import get_adapter
+from oaklib.interfaces import SearchInterface
 
 
-# Constants
-HAS_PHENOTYPE = "biolink:has_phenotype"  # Is this necessary. I read that
-
-@dataclass
 class GroundingAgentConfig(BaseSettings):
-    """ Configuration for Grounding Agent. """
+    """Configuration for the Grounding Agent."""
 
-    # The maximum number of search results to be returned
-    max_search_results: int = 10
+    # Max number of MONDO search results to return
+    max_search_results: int = Field(10)
 
-    # Monarch Adapter
-    monarch_adapter: Optional[MonarchImplementation] = None
+    # Adapter for MONDO lookup (sqlite-based)
+    mondo_adapter: Optional[SearchInterface] = None
 
-    # Control randomness of model output. Lower = less randomness.
-    temperature: float = Field(0.0)
-
+    # API key (optional — if you later call a model)
     api_key: str = Field(default="", alias="DEEPSEEK_API_KEY")
+
+    model_config = SettingsConfigDict(
+        env_prefix="",
+        populate_by_name=True,
+    )
+
+
+def get_config() -> GroundingAgentConfig:
+    """Load config and initialize the MONDO adapter if not provided."""
+    cfg = GroundingAgentConfig()
+
+    if cfg.mondo_adapter is None:
+        cfg.mondo_adapter = get_adapter("sqlite:obo:mondo")
+
+    return cfg
