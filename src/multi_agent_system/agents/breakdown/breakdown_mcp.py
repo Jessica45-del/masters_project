@@ -1,11 +1,14 @@
 """
-MCP tools for diagnostic reasoning agent
+MCP tools for Breakdown Agent
 """
 from pathlib import Path
+from typing import Tuple
+
 from mcp.server.fastmcp import FastMCP
+from multi_agent_system.utils.utils import extract_hpo_ids_and_sex
 from multi_agent_system.agents.breakdown.breakdown_agent import BREAKDOWN_SYSTEM_PROMPT
 from multi_agent_system.agents.breakdown.breakdown_tools import (
-   list_phenopacket_files,
+  # list_phenopacket_files,
    prepare_prompt,
    extract_json_block,
    save_breakdown_result,
@@ -13,26 +16,27 @@ from multi_agent_system.agents.breakdown.breakdown_tools import (
 
 mcp = FastMCP("breakdown", instructions=BREAKDOWN_SYSTEM_PROMPT) #breakdown agent and breakdown system prompt
 
+
+# async def get_phenopacket_files(phenopacket_dir: str) -> list[str]:
+#    """
+#    Find phenopacket files in the phenopacket directory and return file paths.
+#
+#    Args:
+#       phenopacket_dir: Phenopacket directory
+#
+#    Returns:
+#       List of phenopacket file paths
+#
+#    """
+#    return await list_phenopacket_files(phenopacket_dir)
+
+
+
 @mcp.tool()
-async def get_phenopacket_files(phenopacket_dir: str) -> list[str]:
+async def construct_diagnosis_prompt(file_path: str) -> Tuple[str, str]:
    """
-   Find phenopacket files in the phenopacket directory and return file paths.
-
-   Args:
-      phenopacket_dir: Phenopacket directory
-
-   Returns:
-      List of phenopacket file paths
-
-   """
-   return await list_phenopacket_files(phenopacket_dir)
-
-
-@mcp.tool()
-async def construct_diagnosis_prompt(file_path: str) -> tuple[str, str]:
-   """
-   Prepare diagnosis prompt by extracting HPO ID and metadata (PMID and sex)
-   from the phenopacket file.
+   Prepare diagnosis prompt by extracting HPO ID and sex from the phenopacket file
+   and rendering the prompt.
 
    Args:
       file_path: file path to phenopackets JSON file in phenopackets directory
@@ -40,8 +44,11 @@ async def construct_diagnosis_prompt(file_path: str) -> tuple[str, str]:
    Returns:
       Newly constructed diagnosis prompt and phenopacket file name
    """
-   return await prepare_prompt(file_path)
 
+   file_path_obj = Path(file_path)
+   hpo_ids, sex = extract_hpo_ids_and_sex(file_path_obj)
+
+   return await prepare_prompt(hpo_ids, sex, file_path_obj)
 
 @mcp.tool()
 async def get_json_block(text:str) -> list[dict]:

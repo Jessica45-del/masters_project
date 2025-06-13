@@ -8,7 +8,7 @@ from multi_agent_system.agents.breakdown.breakdown_config import get_config
 from multi_agent_system.agents.breakdown.breakdown_tools import (
    prepare_prompt,
    extract_json_block,
-   save_breakdown_result, list_phenopacket_files,
+   save_breakdown_result, #list_phenopacket_files,
 )
 
 config = get_config()
@@ -23,15 +23,12 @@ model = OpenAIModel(
 # System prompt
 BREAKDOWN_SYSTEM_PROMPT = (
    "You are an expert diagnostic reasoning assistant."
-   "You will be given a variable called `phenopacket_file`, which is the path to a single patient's phenopacket JSON file."
    "Your role is to analyse clinical data from individual patient phenopacket files "
    "to generate an initial diagnosis."
    "You have access to a set of tools that enable you to complete this task step by step. "
    "For each patient phenopacket, follow the workflow below:"
    "1. Prepare the Diagnosis Prompt"
-   "Use the prepare_prompt tool to load a single phenopacket file"
-   "The tool will extract the patient's HPO terms and sex, and render the prompt template "
-   "with that information"
+   "Use the prepare_prompt tool to render the HPO IDs and sex from the phenopacket file"
    "2. Generate diagnostic reasoning output"
    "Based on prepared_prompt function use Deepseek to generate a diagnostic analysis."
    "Return your output as a JSON block containing the phenotypic labels, affected systems, and initial diagnosis "
@@ -51,7 +48,7 @@ breakdown_agent = Agent(
 )
 
 #Register tools
-breakdown_agent.tool_plain(list_phenopacket_files)
+# breakdown_agent.tool_plain(list_phenopacket_files)
 breakdown_agent.tool_plain(prepare_prompt)
 breakdown_agent.tool_plain(extract_json_block)
 breakdown_agent.tool_plain(save_breakdown_result)

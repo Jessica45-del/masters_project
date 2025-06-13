@@ -5,10 +5,9 @@ Tools for Breakdown Agent
 from pathlib import Path
 import json
 import re
-
 from jinja2 import Environment, FileSystemLoader
-from pheval.utils.phenopacket_utils import phenopacket_reader, PhenopacketUtil
 from multi_agent_system.agents.breakdown.breakdown_config import get_config
+from multi_agent_system.utils.utils import extract_hpo_ids_and_sex
 
 
 # Load config and Jinja2 environment
@@ -17,53 +16,30 @@ _jinja_env = Environment(loader=FileSystemLoader(str(cfg.template_dir)))
 _template = _jinja_env.get_template(cfg.template_file)
 
 
-async def list_phenopacket_files(phenopacket_dir: str) -> list[str]:
-   """Return all phenopacket files (.json) file paths in the phenopackets directory
+# Prepare prompt
+async def prepare_prompt(hpo_ids: list[str], sex: str, file_path: Path) -> tuple[str, str]:
+    """
+    Prepare prompt by rendering HPO ids and sex
 
-   Args:
-   dir_path: Path to the phenopacket directory
+    Args:
+        hpo_ids: List of HPO term IDs.
+        sex: Patient sex.
+        file_path (Path): Path to the phenopacket file (used only to get filename).
 
-   Returns:
-       Phenopacket files in (.json) in phenopackets directory
-   """
-   print(f"[DEBUG] List files called with: {phenopacket_dir}")
-   return [str(p) for p in Path(phenopacket_dir).glob("*.json")]
+    Returns:
+        tuple[str, str]: The rendered prompt and the base file name.
+    """
+    print(f"Loading phenopacket file: {file_path}")
+    print(f"[DEBUG] Filename stem used for saving: {file_path.stem}")
 
+    # Render prompt using HPO ID and sex
+    prompt = _template.render(
+        hpo_terms=", ".join(hpo_ids),
+        sex=sex
+    )
 
-async def prepare_prompt(file_path: str) -> tuple[str, str]: # find a way to remove disease diagnosis from files before LLM sees it
-   """
-   Load a phenopackets, extract HPO ID  and metadata (sex and PMID)
-   and render a prompt.
+    return prompt, file_path.stem
 
-   Args:
-       file_path: Path to JSON files in the phenopackets directory
-
-   Returns:
-       The prompt and phenopacket file name .
-   """
-   print(f"Loading phenopacket file: {file_path}")
-
-
-   # Load phenopacket as an object
-   phenopacket = phenopacket_reader(Path(file_path))
-
-   # Extract HPO term IDs
-   hpo_ids = [p.type.id for p in PhenopacketUtil(phenopacket).observed_phenotypic_features()]
-
-   # Extract patient metadata
-   sex = phenopacket.subject.sex if phenopacket.subject and phenopacket.subject.sex else "UNKNOWN"
-
-   pkt_id = phenopacket.id or "UNKNOWN"
-
-
-   # Render the template using your diagnosis prompt (global jinja template)
-   prompt = _template.render(
-       hpo_terms=", ".join(hpo_ids),
-       sex=sex
-   )
-
-   # Return the prompt and filename base (for saving results)
-   return prompt, Path(file_path).stem
 
 async def extract_json_block(text: str) -> list[dict]:
    """
