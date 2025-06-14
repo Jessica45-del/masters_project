@@ -5,6 +5,8 @@ Tools for Breakdown Agent
 from pathlib import Path
 import json
 import re
+from typing import Tuple
+
 from jinja2 import Environment, FileSystemLoader
 from multi_agent_system.agents.breakdown.breakdown_config import get_config
 from multi_agent_system.utils.utils import extract_hpo_ids_and_sex
@@ -17,28 +19,34 @@ _template = _jinja_env.get_template(cfg.template_file)
 
 
 # Prepare prompt
-async def prepare_prompt(hpo_ids: list[str], sex: str, file_path: Path) -> tuple[str, str]:
+async def prepare_prompt( file_path: Path) -> Tuple[str, str]:
     """
-    Prepare prompt by rendering HPO ids and sex
+    Prepare prompt inserting HPO id and sex into the prompt
 
-    Args:
-        hpo_ids: List of HPO term IDs.
-        sex: Patient sex.
-        file_path (Path): Path to the phenopacket file (used only to get filename).
+    Arg:
+        file_path: file path to phenopacket json file
 
     Returns:
-        tuple[str, str]: The rendered prompt and the base file name.
+        Render prompt and phenopacket file path
     """
     print(f"Loading phenopacket file: {file_path}")
-    print(f"[DEBUG] Filename stem used for saving: {file_path.stem}")
 
-    # Render prompt using HPO ID and sex
+    file_path_obj = Path(file_path)
+
+    #Extract HPO terms and sex
+    hpo_ids, sex = extract_hpo_ids_and_sex(file_path_obj)
+
+
+    print(f"Extracting HPO ids: {hpo_ids}")
+    print(f"Extracted Sex: {sex}")
+
+    # Render prompt
     prompt = _template.render(
         hpo_terms=", ".join(hpo_ids),
         sex=sex
     )
 
-    return prompt, file_path.stem
+    return prompt, file_path_obj.stem
 
 
 async def extract_json_block(text: str) -> list[dict]:
@@ -76,9 +84,9 @@ async def save_breakdown_result(data: list[dict], name: str) -> Path:
        A JSON output file with the patient HPO IDs, phenotype (label), systems affects
       and initial diagnosis
    """
-   path = cfg.output_dir / f"{name}_initial_diagnosis.json"
-   path.write_text(json.dumps(data, indent=2))
-   return path
+   output_path = cfg.output_dir / f"{name}_initial_diagnosis.json"
+   output_path.write_text(json.dumps(data, indent=2))
+   return output_path
 
 
 

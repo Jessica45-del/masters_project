@@ -1,7 +1,8 @@
 The patient presents with the following metadata:
 - Sex: {{ sex }}
 
-Observed phenotypic abnormalities (HPO terms):
+Please would you provide a ranked list of candidate diseases for this phenotypic profile for observed phenotypic abnormalities
+(HPO terms):
 {{ hpo_terms }}
 
 1. For each phenotype, list:
@@ -11,9 +12,10 @@ Observed phenotypic abnormalities (HPO terms):
 
 2. Based on the phenotype combination, suggest 1–3 initial candidate diseases by name only. **Do not return MONDO IDs**.
 
-Please return the entire output (including all phenoptypes and candidate diseases) in a single JSON array
+Please return the entire output (including all phenotypes and candidate diseases) in a single JSON array
+Provide a score that is the reciprocal of the rank (1/rank)
 
-The output must exactly match this format:
+The output must exactly match the following format:
 
 ```json
 {
@@ -21,7 +23,7 @@ The output must exactly match this format:
     {
       "id": "HP:0004322",
       "label": "Arachnodactyly",
-      "system": "Musculoskeletal system"
+      "system": "Musculoskeletal system",
     },
     {
       "id": "HP:0001156",
@@ -30,7 +32,7 @@ The output must exactly match this format:
     }
   ],
   "candidate_diseases": [
-    "Marfan syndrome",
-    "Loeys-Dietz syndrome"
-  ]
+  {"label": "Leigh syndrome", "score": 0.95},
+  {"label": "Mitochondrial encephalopathy", "score": 0.74}
+]
 }
