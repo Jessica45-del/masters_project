@@ -27,15 +27,15 @@ async def prepare_prompt( file_path: Path) -> Tuple[str, str]:
         file_path: file path to phenopacket json file
 
     Returns:
-        Render prompt and phenopacket file path
+        Rendered prompt and phenopacket file path
     """
     print(f"Loading phenopacket file: {file_path}")
 
+    # Path to phenopacket files
     file_path_obj = Path(file_path)
 
-    #Extract HPO terms and sex
+    # Extract HPO ID and sex using extract_hpo_ids_and_sex() in utils.py
     hpo_ids, sex = extract_hpo_ids_and_sex(file_path_obj)
-
 
     print(f"Extracting HPO ids: {hpo_ids}")
     print(f"Extracted Sex: {sex}")
