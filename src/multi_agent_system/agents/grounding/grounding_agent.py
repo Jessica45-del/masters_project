@@ -21,8 +21,12 @@ GROUNDING_SYSTEM_PROMPT = (
     "You are an expert in rare disease knowledge."
     "Your task is to provide additional ontological information about rare disease"
     "You will receive a disease label as input."
-    "Your task is to find the MONDO ontology ID for this label using "
+    "Your task is to: "
+    "Extract the disease labels from patient initial diagnosis results patient files"
+    "using extract_disease_label function"
+    "the use disease labels to find the MONDO ontology ID for the label using "
     "the find_mondo_id function."
+    "Return results to memory"
 )
 
 # Create grounding agent
@@ -33,7 +37,7 @@ grounding_agent = Agent(
 
 # Register tools
 grounding_agent.tool_plain(extract_disease_label)
-grounding_agent.tool(find_mondo_id)
+grounding_agent.tool_plain(find_mondo_id)
 
 
 

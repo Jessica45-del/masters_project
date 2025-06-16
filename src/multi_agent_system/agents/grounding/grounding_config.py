@@ -16,6 +16,9 @@ class GroundingAgentConfig(BaseSettings):
     # Max number of MONDO search results to return
     max_search_results: int = Field(10)
 
+    # Adapter for MONDO lookup (sqlite-based)
+    mondo_adapter: Optional[SearchInterface] = None
+
     api_key: str = Field(default="", alias="DEEPSEEK_API_KEY")
 
     model_config = SettingsConfigDict(

@@ -30,3 +30,4 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 breakdown_agent = "multi_agent_system.cli:run_agent"
+grounding_agent = "multi_agent_system.cli:run_grounding_agent"

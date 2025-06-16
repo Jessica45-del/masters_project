@@ -53,7 +53,7 @@ async def find_mondo_id(label:str) -> dict[str, str | Any] | dict[str, str | Non
     Returns:
         A dictionary with the disease 'label' and 'MONDO ID', or 'id':None if not found
     """
-    print(f"Searching for {label}")
+    print(f"Searching for MONDO ID for label {label}")
     adapter = get_mondo_adapter()
 
     try:
