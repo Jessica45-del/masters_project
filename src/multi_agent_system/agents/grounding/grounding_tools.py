@@ -16,7 +16,7 @@ def get_mondo_adapter():
     return get_adapter("sqlite:obo:mondo")
 
 # Extract disease labels from initial diagnosis files
-async def extract_disease_label(results_dir:str ) -> Dict[str, List[str]]:
+async def extract_disease_label(file_path:str) -> Dict[str, List[str]]:
     """
     Extract candidate disease labels from initial_diagnosis result files
 
@@ -26,20 +26,22 @@ async def extract_disease_label(results_dir:str ) -> Dict[str, List[str]]:
     Returns:
         A dictionary mapping each patient file name to the intial candidates diseases
     """
-
+    print(f"[DEBUG] extract_disease_label called with file: {file_path}")
     result = {}
-    input_dir = Path(results_dir)
-    for file_path in input_dir.glob("*.json"):
-        try:
-            data = json.loads(file_path.read_text())
-            if isinstance(data, list) and "candidate_diseases" in data[0]:
-                labels = data[0]["candidate_diseases"]
-                result[file_path.stem] = labels
-            else:
-                print(f"Invalid or missing candidate_diseases in {file_path.name}")
-        except Exception as e:
-            print(f"Failed to read {file_path.name}: {e}")
+
+    try:
+        data = json.loads(Path(file_path).read_text())
+        if isinstance(data, list) and "candidate_diseases" in data[0]:
+            labels = [d["label"] for d in data[0]["candidate_diseases"] if "label" in d]
+            result[Path(file_path).stem] = labels
+            print(f"[DEBUG] Extracted labels: {result}")
+        else:
+            print(f"[WARN] No candidate_diseases in {file_path}")
+    except Exception as e:
+        print(f"[ERROR] Failed to read: {file_path}: {e}")
+
     return result
+
 
 
 # Search for MONDO ID
@@ -48,25 +50,25 @@ async def find_mondo_id(label:str) -> dict[str, str | Any] | dict[str, str | Non
     Search for MONDO ID for a given patient disease label and return the best match.
 
     Args:
-        label: The disease label to search (e.g."Bardet-Biedl syndrome(BBS)")
+        label: The candidate disease label to search (e.g."Bardet-Biedl syndrome(BBS)")
 
     Returns:
         A dictionary with the disease 'label' and 'MONDO ID', or 'id':None if not found
     """
-    print(f"Searching for MONDO ID for label {label}")
+    print(f"Searching for MONDO ID for label: {label}")
     adapter = get_mondo_adapter()
 
     try:
-        results = adapter.basic_search(label)
+        results = list(adapter.basic_search(label))
         if results:
             hit = results[0]
-            print(f"[DEBUG] Found match: {hit.id} ({hit.label})")
+            print(f"[DEBUG] Found match: {hit.id}")
             return {"label": label, "id": hit.id}
     except Exception as e:
         print(f"[ERROR] Failed to ground '{label}': {e}")
 
     return {"label": label, "id": None}
 
-# async def get_disease_profile():
+#async def get_disease_profile():
 
 

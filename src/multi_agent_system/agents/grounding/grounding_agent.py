@@ -18,15 +18,19 @@ model = OpenAIModel(
 )
 
 GROUNDING_SYSTEM_PROMPT = (
-    "You are an expert in rare disease knowledge."
-    "Your task is to provide additional ontological information about rare disease"
-    "You will receive a disease label as input."
-    "Your task is to: "
-    "Extract the disease labels from patient initial diagnosis results patient files"
-    "using extract_disease_label function"
-    "the use disease labels to find the MONDO ontology ID for the label using "
+    "You are an expert in rare disease ontologies."
+    "Your task is to enrich diagnostic output with MONDO identifiers."
+    "You will work with results from an breakdown agent which include "
+    "disease candidate labels. "
+    "Follow this workflow for each patient file: "
+    "1.For each patient results file (a `.json` file located in the initial diagnosis directory)"
+    "use the 'extract_disease_label to extract patient disease labels"
+    "2.Then use the disease labels to find the MONDO ontology ID for the label using "
     "the find_mondo_id function."
-    "Return results to memory"
+    "3. Return the results as a JSON list of objects. "
+    "Each object must contain the disease `label` and its corresponding MONDO `id`."
+    "If no MONDO match is found, return null for the ID."
+    "Use only the provided functions to complete this task."
 )
 
 # Create grounding agent

@@ -25,7 +25,8 @@ def run_agent(phenopacket_dir: str):
 async def run_grounding_agent_async(results_dir: str):
     for json_file in Path(results_dir).glob("*.json"):
         print(f"[INFO] Running grounding agent on: {json_file.name}")
-        await grounding_agent.run(str(json_file))
+        result = await grounding_agent.run(str(json_file))
+        print(f"[RESULT] {json_file.name}: {result}")
 
 @click.command(name="grounding_agent")
 @click.option("--results-dir", type=click.Path(exists=True, file_okay=False), required=True)
