@@ -1,8 +1,9 @@
 import json
 from functools import lru_cache
 from pathlib import Path
-from typing import Dict, List, Any, Coroutine
+from typing import Dict, List, Any
 from oaklib import get_adapter
+from multi_agent_system.utils.grounding_utils import search_mondo_fallback
 
 
 
@@ -67,7 +68,8 @@ async def find_mondo_id(label:str) -> dict[str, str | Any] | dict[str, str | Non
     except Exception as e:
         print(f"[ERROR] Failed to ground '{label}': {e}")
 
-    return {"label": label, "id": None}
+    # Fallback to cosine similarity if exact (i.e. basic search) match fails
+    return search_mondo_fallback(label)
 
 #async def get_disease_profile():
 

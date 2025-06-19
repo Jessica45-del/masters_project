@@ -5,7 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/multi_agent_system/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.12.3 WSL (Ubuntu): (/home/jessica/.cache/pypoetry/virtualenvs/multi-agent-system-u75IvHqz-py3.12/bin/python) (2)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.12.3 WSL (Ubuntu): (/home/jessica/.cache/pypoetry/virtualenvs/multi-agent-system-4ECZbOTM-py3.12/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
