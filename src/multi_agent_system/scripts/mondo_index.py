@@ -12,7 +12,7 @@ import json
 import numpy as np
 
 # define output directory for index files
-output_dir = Path("utils/data/mondo_index")
+output_dir = Path("src/multi_agent_system/utils/data")
 output_dir.mkdir(parents=True, exist_ok=True)
 
 
@@ -55,6 +55,8 @@ index.add(embeddings)
 faiss.write_index(index, str(output_dir / "mondo_faiss.index"))
 
 # Save disease label and MONDO id to output_dir
+
+faiss.write_index(index, str(output_dir / "mondo_faiss.index"))
 with open(output_dir / "mondo_labels.json", "w") as f:
     json.dump(mondo_labels, f)
 
