@@ -63,22 +63,3 @@ with open(output_dir / "mondo_labels.json", "w") as f:
 with open(output_dir / "mondo_ids.json", "w") as f:
     json.dump(mondo_ids, f)
 
-
-
-
-
-
-#
-# def cosine_search(label: str, faiss_index, mondo_id_lookup) -> Optional[str]:
-#     """
-#     Cosine Similarity Search
-#
-#     Args:
-#         label:
-#         faiss_index:
-#         mondo_id_lookup:
-#
-#     Returns:
-#
-#
-#     """

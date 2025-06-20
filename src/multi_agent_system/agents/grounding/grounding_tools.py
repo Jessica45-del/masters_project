@@ -61,12 +61,12 @@ async def find_mondo_id(label:str) -> dict[str, str | Any] | dict[str, str | Non
 
     try:
         results = list(adapter.basic_search(label))
-        if results:
+        if results and not isinstance(results[0], str):
             hit = results[0]
-            print(f"[DEBUG] Found match: {hit.id}")
+            print(f"Found match: {hit.id}")
             return {"label": label, "id": hit.id}
     except Exception as e:
-        print(f"[ERROR] Failed to ground '{label}': {e}")
+        print(f"Failed to ground '{label}': {e}")
 
     # Fallback to cosine similarity if exact (i.e. basic search) match fails
     return search_mondo_fallback(label)
