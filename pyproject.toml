@@ -22,6 +22,7 @@ pydantic-ai = "^0.2.12"
 pheval = "^0.5.7"
 sentence-transformers = "^4.1.0"
 faiss-cpu = "^1.11.0"
+einops = "^0.8.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.26.0"
@@ -33,3 +34,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 breakdown_agent = "multi_agent_system.cli:run_agent"
 grounding_agent = "multi_agent_system.cli:run_grounding_agent"
+agents = "multi_agent_system.cli:cli"

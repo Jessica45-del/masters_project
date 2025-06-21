@@ -17,7 +17,7 @@ output_dir.mkdir(parents=True, exist_ok=True)
 
 
 # embedding model
-model = SentenceTransformer("all-MiniLM-L6-v2")
+model = SentenceTransformer("nomic-ai/nomic-embed-text-v1",  trust_remote_code=True) #nomic
 
 # load mondo db
 adapter = get_adapter("sqlite:obo:mondo")
@@ -37,7 +37,7 @@ for entity in entities:
         mondo_ids.append(entity)
 
 # Produce embeddings for MONDO labels
-    # convert label into a 384-dimension vector
+
 embeddings = model.encode(mondo_labels, show_progress_bar=True)
 
 # Normalise each vector
@@ -55,30 +55,9 @@ index.add(embeddings)
 faiss.write_index(index, str(output_dir / "mondo_faiss.index"))
 
 # Save disease label and MONDO id to output_dir
-
-faiss.write_index(index, str(output_dir / "mondo_faiss.index"))
 with open(output_dir / "mondo_labels.json", "w") as f:
     json.dump(mondo_labels, f)
 
 with open(output_dir / "mondo_ids.json", "w") as f:
     json.dump(mondo_ids, f)
 
-
-
-
-
-
-#
-# def cosine_search(label: str, faiss_index, mondo_id_lookup) -> Optional[str]:
-#     """
-#     Cosine Similarity Search
-#
-#     Args:
-#         label:
-#         faiss_index:
-#         mondo_id_lookup:
-#
-#     Returns:
-#
-#
-#     """
