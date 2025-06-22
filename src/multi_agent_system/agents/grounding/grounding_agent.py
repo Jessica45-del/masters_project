@@ -7,7 +7,8 @@ from pydantic_ai.providers.deepseek import DeepSeekProvider
 from multi_agent_system.agents.grounding.grounding_config import get_config
 from multi_agent_system.agents.grounding.grounding_tools import (
     find_mondo_id,
-    extract_disease_label
+    extract_disease_label,
+    find_disease_knowledge,
 )
 
 config = get_config()
@@ -18,19 +19,20 @@ model = OpenAIModel(
 )
 
 GROUNDING_SYSTEM_PROMPT = (
-    "You are an expert in rare disease ontologies."
-    "Your task is to enrich diagnostic output with MONDO identifiers."
-    "You will work with results from an breakdown agent which include "
-    "disease candidate labels. "
-    "Follow this workflow for each patient file: "
-    "1.For each patient results file (a `.json` file located in the initial diagnosis directory)"
-    "use the 'extract_disease_label to extract patient disease labels"
-    "2.Then use the disease labels to find the MONDO ontology ID for the label using "
-    "the find_mondo_id function."
-    "3. Return the results as a JSON list of objects. "
-    "Each object must contain the disease `label` and its corresponding MONDO `id`."
-    "If no MONDO match is found, return null for the ID."
-    "Use only the provided functions to complete this task."
+    "You are an expert in rare disease ontologies.  "
+    "Your task is to enrich diagnostic results by:"
+    "1. Extracting candidate disease labels from JSON patient diagnosis files using "
+    "the extract_disease_label function."
+    "2. For each disease label, use the find_mondo_id function to map it to a MONDO identifier."
+    "3. For each MONDO ID you find, use the get_disease_knowledge function to "
+    "retrieve phenotypic associations (e.g., HPO terms)."
+    "4. Return a list of objects. Each object must include:"
+    "- the original disease `label`"
+    "- the MONDO `id`"
+    "- and a list of associated phenotypes from the Monarch knowledge base "
+    "under a `phenotypes` key."
+    "If no MONDO match is found, include `id': null` and an empty list for 'phenotypes'"
+    "Use only the registered functions to complete this task."
 )
 
 # Create grounding agent
@@ -42,6 +44,7 @@ grounding_agent = Agent(
 # Register tools
 grounding_agent.tool_plain(extract_disease_label)
 grounding_agent.tool_plain(find_mondo_id)
+grounding_agent.tool_plain(find_disease_knowledge)
 
 
 

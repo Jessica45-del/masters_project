@@ -1,8 +1,14 @@
 
+#---------------------
+#COMMAND TO RUN PIPELINE
+# poetry run agents run_pipeline --phenopacket-dir multi_agent_system/phenopackets
+# poetry run agents breakdown --run-evals
+#----------------------
+
+
 from pathlib import Path
 import click
 import asyncio
-
 from pheval.utils.file_utils import all_files
 from multi_agent_system.utils.utils import extract_hpo_ids_and_sex
 from multi_agent_system.agents.breakdown.breakdown_agent import breakdown_agent
@@ -13,7 +19,8 @@ from multi_agent_system.agents.grounding.grounding_agent import grounding_agent
 # from multi_agent_system.agents.aggregation.aggregator_agent import aggregator_agent
 
 
-# poetry run agents run_pipeline --phenopacket-dir multi_agent_system/phenopackets
+from multi_agent_system.agents.breakdown.breakdown_evals import create_eval_dataset
+
 
 
 async def run_pipeline_async(phenopacket_dir: str):
@@ -25,20 +32,20 @@ async def run_pipeline_async(phenopacket_dir: str):
 
         print(f"\n[INFO] Processing: {phenopacket_path.name}")
 
-        # Step 1: Extract HPO IDs and sex
+        # Extract HPO IDs and sex (PRE-PROCESSING STEP)
         hpo_ids, sex = extract_hpo_ids_and_sex(phenopacket_path)
 
-        # Step 2: Run Breakdown Agent (Agent 1)
+        # RUN BREAKDOWN AGENT (Agent 1)
         breakdown_input = {
             "hpo_ids": hpo_ids,
             "sex": sex,
-            "name": phenopacket_path.stem  # Keep original patient ID (as you want)
+            "name": phenopacket_path.stem
         }
 
         print(f"[INFO] Passing to breakdown agent: {breakdown_input}")
         await breakdown_agent.run(breakdown_input)
 
-        # Step 3: Run Grounding Agent (Agent 2)
+        # RUN GROUNDING AGENT (Agent 2)
         breakdown_result_path = Path("results/initial_diagnosis") / f"{phenopacket_path.stem}_initial_diagnosis.json"
 
         if not breakdown_result_path.exists():
@@ -54,25 +61,52 @@ async def run_pipeline_async(phenopacket_dir: str):
         # Step 5: (Optional) Aggregator Agent
         # await aggregator_agent.run(similarity_result)
 
-@click.command(name="run_pipeline")
+
+#--------------------
+# CLI Entry Point
+#--------------------
+@click.group()
+def cli():
+    """Multi-agent diagnostic pipeline CLI"""
+    pass
+
+# Full multi-agent pipeline
+@cli.command(name="run_pipeline")
 @click.option("--phenopacket-dir", type=click.Path(exists=True, file_okay=False), required=True)
 def run_pipeline(phenopacket_dir: str):
     """Run the full multi-agent diagnostic pipeline (Agents 1 → 4)."""
     asyncio.run(run_pipeline_async(phenopacket_dir))
 
 
-@click.group()
-def cli():
-    pass
+# ------------------------
+# Evaluation
+#---------------------------
 
 
-cli.add_command(run_pipeline)
+@cli.command()
+@click.option('--run-evals', is_flag=True, help="Run evaluation tests for the breakdown agent.")
+def breakdown(run_evals):
+    if run_evals:
+        print("Running breakdown agent evaluations...")
+
+        async def run_evals():
+            dataset = create_eval_dataset()
+            results = await dataset.evaluate(breakdown_agent.run)
+            for result in results:
+                print(result)
+
+        asyncio.run(run_evals())
+
+    # else:
+    #     print("[INFO] Running breakdown agent normally...")
+    #     # Default logic
+
+
+
+
 
 if __name__ == "__main__":
     cli()
-
-
-
 
 
 

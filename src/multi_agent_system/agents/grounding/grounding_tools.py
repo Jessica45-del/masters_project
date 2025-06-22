@@ -3,8 +3,11 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Any
 from oaklib import get_adapter
+from oaklib.implementations import MonarchImplementation
+
 from multi_agent_system.utils.grounding_utils import search_mondo_fallback
 
+HAS_PHENOTYPE = "biolink:has_phenotype"
 
 
 @lru_cache
@@ -72,5 +75,37 @@ async def find_mondo_id(label:str) -> dict[str, str | Any] | dict[str, str | Non
     return search_mondo_fallback(label)
 
 
+async def find_disease_knowledge(mondo_id:str) -> List[dict]:
+    """
+    Retrieve disease knowledge for a given MONDO ID.
 
+    Arg:
+        mondo_id: The MONDO ID to retrieve knowledge
 
+    Returns:
+        List of dictionaries with HPO terms and other disease associated metadata
+    """
+    print(f"Retrieve disease knowledge for {mondo_id}")
+    adapter = MonarchImplementation()
+
+    try:
+        results = []
+        disease_association = adapter.associations(
+            subjects=[mondo_id],
+            predicates=[HAS_PHENOTYPE]
+        )
+
+        for assoc in disease_association:
+            if assoc.object:
+                results.append({
+                    "mondo_id": mondo_id,
+                    "hpo_id": assoc.object,
+                    "predicate": getattr(assoc, "predicate", HAS_PHENOTYPE),
+                    "source": getattr(assoc, "provided_by", None),
+                })
+
+        return results
+
+    except Exception as e:
+        print(f"[ERROR] Failed to retrieve disease knowledge for {mondo_id}: {e}")
+        return []
