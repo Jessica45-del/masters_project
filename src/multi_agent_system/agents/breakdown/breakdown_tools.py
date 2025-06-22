@@ -5,11 +5,10 @@ Tools for Breakdown Agent
 from pathlib import Path
 import json
 import re
-from typing import Tuple
-
+from typing import Tuple, List
 from jinja2 import Environment, FileSystemLoader
 from multi_agent_system.agents.breakdown.breakdown_config import get_config
-from multi_agent_system.utils.utils import extract_hpo_ids_and_sex
+
 
 
 # Load config and Jinja2 environment
@@ -19,34 +18,23 @@ _template = _jinja_env.get_template(cfg.template_file)
 
 
 # Prepare prompt
-async def prepare_prompt( file_path: Path) -> Tuple[str, str]:
+async def prepare_prompt(hpo_ids: List[str], sex: str) -> str:
     """
-    Prepare prompt inserting HPO id and sex into the prompt
+    Prepare diagnostic prompt by rendering HPO IDs and Sex
 
-    Arg:
-        file_path: file path to phenopacket json file
+    Args:
+        hpo_ids: List of HPO term IDs
+        sex: Patient sex
 
     Returns:
-        Rendered prompt and phenopacket file path
+        Rendered prompt
     """
-    print(f"Loading phenopacket file: {file_path}")
-
-    # Path to phenopacket files
-    file_path_obj = Path(file_path)
-
-    # Extract HPO ID and sex using extract_hpo_ids_and_sex() in utils.py
-    hpo_ids, sex = extract_hpo_ids_and_sex(file_path_obj)
-
-    print(f"Extracting HPO ids: {hpo_ids}")
-    print(f"Extracted Sex: {sex}")
-
-    # Render prompt
     prompt = _template.render(
         hpo_terms=", ".join(hpo_ids),
         sex=sex
     )
+    return prompt
 
-    return prompt, file_path_obj.stem
 
 
 async def extract_json_block(text: str) -> list[dict]:
@@ -89,22 +77,3 @@ async def save_breakdown_result(data: list[dict], name: str) -> Path:
    return output_path
 
 
-
-
-
-# async def run_breakdown_pipeline(file_path: str) -> tuple[list[dict], str]:
-#     """
-#     Run the breakdown pipeline for one phenopacket.
-#
-#     Args:
-#         file_path: Path to JSON files in the phenopackets directory
-#
-#     Returns:
-#         Parsed diagnosis result and phenopacket file base name.
-#     """
-#     prompt, name = await prepare_prompt(file_path)
-#     print(f"[Breakdown] Prompt ready for: {name}")
-#     response = await model.complete(prompt=prompt)
-#     parsed = await extract_json_block(response)
-#     print(f"[Breakdown] Diagnosis complete for: {name}")
-#     return parsed, name
