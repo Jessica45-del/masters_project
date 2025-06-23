@@ -1,5 +1,5 @@
 """
-MCP tools for Grounding Agent
+MCP tools for interacting with the  Grounding Agent
 """
 
 from typing import Dict, List

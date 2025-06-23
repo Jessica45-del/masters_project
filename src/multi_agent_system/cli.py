@@ -5,17 +5,18 @@
 # poetry run agents breakdown --run-evals
 #----------------------
 
-
-from pathlib import Path
+import json
 import click
 import asyncio
+from pathlib import Path
 from pheval.utils.file_utils import all_files
 from multi_agent_system.utils.utils import extract_hpo_ids_and_sex
 from multi_agent_system.agents.breakdown.breakdown_agent import breakdown_agent
 from multi_agent_system.agents.grounding.grounding_agent import grounding_agent
+from multi_agent_system.agents.similarity_scoring.similarity_agent import similarity_agent
+
 
 # Placeholder imports for future agents
-# from multi_agent_system.agents.similarity.similarity_agent import similarity_agent
 # from multi_agent_system.agents.aggregation.aggregator_agent import aggregator_agent
 
 
@@ -55,8 +56,12 @@ async def run_pipeline_async(phenopacket_dir: str):
         grounding_result = await grounding_agent.run(str(breakdown_result_path))
         print(f"[GROUNDING RESULT] {phenopacket_path.stem}:\n{grounding_result.output}\n")
 
-        # Step 4: (Optional) Similarity Agent
-        # similarity_result = await similarity_agent.run(grounding_result)
+        # RUN SIMILARITY SCORE AGENT
+        similarity_result = await similarity_agent.run({
+            "patient_hpo_terms": hpo_ids,
+            "candidate_diseases": json.loads(grounding_result.output)
+        })
+        print(f"[SIMILARITY RESULT] {phenopacket_path.stem}:\n{similarity_result.output}")
 
         # Step 5: (Optional) Aggregator Agent
         # await aggregator_agent.run(similarity_result)
