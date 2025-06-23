@@ -5,6 +5,7 @@
 # poetry run agents breakdown --run-evals
 #----------------------
 
+import re
 import json
 import click
 import asyncio
@@ -56,10 +57,16 @@ async def run_pipeline_async(phenopacket_dir: str):
         grounding_result = await grounding_agent.run(str(breakdown_result_path))
         print(f"[GROUNDING RESULT] {phenopacket_path.stem}:\n{grounding_result.output}\n")
 
-        # RUN SIMILARITY SCORE AGENT
+        # RUN SIMILARITY SCORE AGENT (Agent 3)
+        def extract_json(text:str) -> str: #extract grounding result json output
+            match = re.search(r"```json\s*(.*?)\s*```", text, re.DOTALL)
+            return match.group(1).strip() if match else text.strip()
+
+        parsed_grounding_output = json.loads(extract_json(grounding_result.output))
+
         similarity_result = await similarity_agent.run({
             "patient_hpo_terms": hpo_ids,
-            "candidate_diseases": json.loads(grounding_result.output)
+            "candidate_diseases": parsed_grounding_output
         })
         print(f"[SIMILARITY RESULT] {phenopacket_path.stem}:\n{similarity_result.output}")
 
