@@ -40,12 +40,14 @@ async def run_pipeline_async(phenopacket_dir: str):
         # RUN BREAKDOWN AGENT (Agent 1)
         breakdown_input = {
             "hpo_ids": hpo_ids,
-            "sex": sex,
-            "name": phenopacket_path.stem
+            "sex":sex,
+            "name":phenopacket_path.stem
         }
 
+
         print(f"[INFO] Passing to breakdown agent: {breakdown_input}")
-        await breakdown_agent.run(breakdown_input)
+        response = await breakdown_agent.run(breakdown_input)
+        print(response)
 
         # RUN GROUNDING AGENT (Agent 2)
         breakdown_result_path = Path("results/initial_diagnosis") / f"{phenopacket_path.stem}_initial_diagnosis.json"
