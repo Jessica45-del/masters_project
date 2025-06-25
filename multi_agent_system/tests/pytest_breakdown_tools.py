@@ -1,6 +1,7 @@
 import pytest
 from multi_agent_system.agents.breakdown.breakdown_tools import prepare_prompt
 from multi_agent_system.agents.breakdown.breakdown_tools import extract_json_block
+from unittest.mock import patch, MagicMock
 
 @pytest.mark.asyncio
 async def test_prepare_prompt_real_template():
@@ -45,8 +46,7 @@ async def test_extract_json_block_no_json_block():
     assert result[0].get("error") == "Could not parse JSON"
     assert "no json block" in result[1].get("raw", "")
 
-from unittest.mock import patch, MagicMock
-import pytest
+
 
 @pytest.mark.asyncio
 async def test_prepare_prompt_mocked():
