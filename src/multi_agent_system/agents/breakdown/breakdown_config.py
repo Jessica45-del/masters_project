@@ -11,8 +11,7 @@ class BreakdownAgentConfig(BaseSettings):
    """ Configuration settings for Breakdown Agent"""
    # Orchestration model (plan & tool dispatch)
    model_name: str      = Field("deepseek-chat")
-   max_tokens: int      = Field(256)
-   temperature: float   = Field(0.0)
+   temperature: float   = Field(0.2)
    api_key: str         = Field(default ="",alias="DEEPSEEK_API_KEY")
 
 

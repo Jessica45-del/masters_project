@@ -1,79 +1,90 @@
 """
-Tools for Breakdown Agent
+Tools for Breakdown Agent using Pydantic model for output.
 """
 
 from pathlib import Path
 import json
 import re
-from typing import Tuple, List
-from jinja2 import Environment, FileSystemLoader
+from typing import List
+from pydantic import BaseModel, Field, ValidationError
 from multi_agent_system.agents.breakdown.breakdown_config import get_config
 
+# ------------------------------
+# 🏷 Pydantic Model
+# ------------------------------
+class Phenotype(BaseModel):
+    id: str = Field(..., description="HPO term ID")
+    label: str = Field(..., description="Phenotype label")
+    system: str = Field(..., description="Affected system or organ")
 
+class CandidateDisease(BaseModel):
+    label: str = Field(..., description="Disease label")
+    score: float = Field(..., description="Reciprocal rank score")
 
-# Load config and Jinja2 environment
+class PhenotypeDiagnosisResult(BaseModel):
+    phenotypes: List[Phenotype]
+    candidate_diseases: List[CandidateDisease]
+
+# ------------------------------
+# 🔧 Jinja Environment
+# ------------------------------
+from jinja2 import Environment, FileSystemLoader
 cfg = get_config()
 _jinja_env = Environment(loader=FileSystemLoader(str(cfg.template_dir)))
 _template = _jinja_env.get_template(cfg.template_file)
 
-
-# Prepare prompt
+# ------------------------------
+#  Prepare Prompt
+# ------------------------------
 async def prepare_prompt(hpo_ids: List[str], sex: str) -> str:
     """
-    Prepare diagnostic prompt by rendering HPO IDs and Sex
-
-    Args:
-        hpo_ids: List of HPO term IDs
-        sex: Patient sex
-
-    Returns:
-        Rendered prompt
+    Prepare diagnostic prompt by rendering HPO IDs and Sex.
     """
+    print(f"[TOOL CALLED] prepare_prompt with hpo_ids={hpo_ids}, sex={sex}")
     prompt = _template.render(
         hpo_terms=", ".join(hpo_ids),
         sex=sex
     )
     return prompt
 
+# ------------------------------
+# Extract Pydantic Model from LLM Output
+# ------------------------------
+async def extract_json_block(text: str) -> PhenotypeDiagnosisResult:
+    """
+    Extract JSON object and validate against Breakdown Diagnosis model.
+
+    Args:
+        text (str): Text to be parsed containing the JSON object representing Breakdown Diagnosis.
+
+    Returns:
+        Validated Breakdown Diagnosis model containing the extracted data
+    """
+    print(f"[TOOL CALLED] extract_json_block {text}")
+
+    match = re.search(r"```json\s*({.*?})\s*```", text, re.DOTALL)
+    if not match:
+        match = re.search(r"({.*})", text, re.DOTALL)
+    if not match:
+        raise ValueError("No model block found")
+    try:
+        parsed = json.loads(match.group(1))
+        return PhenotypeDiagnosisResult.model_validate(parsed)
+    except (json.JSONDecodeError, ValidationError) as e:
+        raise ValueError(f"Could not parse or validate model: {e}")
 
 
-async def extract_json_block(text: str) -> list[dict]:
-   """
-   Extract JSON block from deepseek model response
-
-   Args:
-       text: Deepseek model response
-
-   Returns:
-       JSON block from deepseek model response.
-       If JSON could not be parsed, return an error message "Could not parse JSON"
-   """
-   match = re.search(r"```json\s*(\[\s*{.*?}\s*])\s*```", text, re.DOTALL)
-   if match:
-       try:
-           parsed = json.loads(match.group(1))
-           if isinstance(parsed, list):
-               return parsed
-       except json.JSONDecodeError as e:
-           print(f"[DEBUG] JSON decode error: {e}")
-   return [{"error": "Could not parse JSON"}, {"raw": text}]
-
-
-
-async def save_breakdown_result(data: list[dict], name: str) -> Path:
-   """
-   Save results the results to
-
-   Args:
-       data: JSON response from deepseek model
-       name: Name of patient file
-
-   Returns:
-       A JSON output file with the patient HPO IDs, phenotype (label), systems affects
-      and initial diagnosis
-   """
-   output_path = cfg.output_dir / f"{name}_initial_diagnosis.json"
-   output_path.write_text(json.dumps(data, indent=2))
-   return output_path
-
-
+# ------------------------------
+#  Save Model Result
+# ------------------------------
+async def save_breakdown_result(
+    model: PhenotypeDiagnosisResult,
+    name: str
+) -> Path:
+    """
+    Save validated BreakdownDiagnosis as JSON.
+    """
+    print(f"[TOOL CALLED] save_breakdown_result with name={name}")
+    output_path = cfg.output_dir / f"{name}.json"
+    output_path.write_text(model.model_dump_json(indent=2))
+    return output_path
