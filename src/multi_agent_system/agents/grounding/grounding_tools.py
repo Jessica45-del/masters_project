@@ -5,10 +5,21 @@ from typing import Dict, List, Any
 from oaklib import get_adapter
 from oaklib.implementations import MonarchImplementation
 
+from multi_agent_system.agents.breakdown.breakdown_tools import InitialDiagnosisResult
 from multi_agent_system.utils.grounding_utils import search_mondo_fallback
 
-HAS_PHENOTYPE = "biolink:has_phenotype"
 
+from pydantic import BaseModel, Field
+
+class GroundedDiseaseResult(BaseModel):
+    disease_name: str = Field(..., description=" (Initial) Original disease label from breakdown agent")
+    mondo_id: str | None = Field(None, description="Grounded MONDO ID, or None if not found")
+    phenotypes:list = Field(default_factory=list, description="Phenotype/HPO association")
+    fallback_reason: str | None = Field(None, description="Optional explanation if fallback method used")
+
+
+
+HAS_PHENOTYPE = "biolink:has_phenotype"
 
 @lru_cache
 def get_mondo_adapter():
@@ -20,31 +31,37 @@ def get_mondo_adapter():
     return get_adapter("sqlite:obo:mondo")
 
 # Extract disease labels from initial diagnosis files
-async def extract_disease_label(file_path:str) -> Dict[str, List[str]]:
+async def ground_diseases(labels: List[str] ) -> list[GroundedDiseaseResult]:
     """
-    Extract candidate disease labels from initial_diagnosis result files
+    Ground each candidate disease from the initial diagnosis result to a MONDO ID.
 
     Args:
-    results_dir: The directory containing the initial diagnosis results
+        labels: list of disease names in candidate diseases
 
     Returns:
-        A dictionary mapping each patient file name to the intial candidates diseases
+        A list of GroundedDisease entries with MONDO IDs or fallbacks
     """
-    print(f"[DEBUG] extract_disease_label called with file: {file_path}")
-    result = {}
+    results = [] # collect grounded disease results with MONDO IDs
+    for label in labels:
+        grounding = await find_mondo_id(label)
 
-    try:
-        data = json.loads(Path(file_path).read_text())
-        if isinstance(data, list) and "candidate_diseases" in data[0]:
-            labels = [d["label"] for d in data[0]["candidate_diseases"] if "label" in d]
-            result[Path(file_path).stem] = labels
-            print(f"[DEBUG] Extracted labels: {result}")
+        # if MONDO ID is found
+        if "id" in grounding and grounding["id"]:
+            results.append(GroundedDiseaseResult(
+                disease_name=label,
+                mondo_id=grounding["id"],
+                fallback_reason=None
+            ))
+
+        # if no MONDO ID found
         else:
-            print(f"[WARN] No candidate_diseases in {file_path}")
-    except Exception as e:
-        print(f"[ERROR] Failed to read: {file_path}: {e}")
+            results.append(GroundedDiseaseResult(
+                disease_name=label,
+                mondo_id=None,
+                fallback_reason="No MONDO ID found via primary or fallback search"
+            ))
 
-    return result
+    return results
 
 
 
@@ -75,7 +92,7 @@ async def find_mondo_id(label:str) -> dict[str, str | Any] | dict[str, str | Non
     return search_mondo_fallback(label)
 
 
-async def find_disease_knowledge(mondo_id:str) -> List[dict]:
+async def find_disease_knowledge(mondo_id:str, limit: int =10 ) -> List[dict]:
     """
     Retrieve disease knowledge for a given MONDO ID.
 
@@ -85,6 +102,7 @@ async def find_disease_knowledge(mondo_id:str) -> List[dict]:
     Returns:
         List of dictionaries with HPO terms and other disease associated metadata
     """
+
     print(f"Retrieve disease knowledge for {mondo_id}")
     adapter = MonarchImplementation()
 
@@ -95,7 +113,9 @@ async def find_disease_knowledge(mondo_id:str) -> List[dict]:
             predicates=[HAS_PHENOTYPE]
         )
 
-        for assoc in disease_association:
+        for i, assoc in enumerate(disease_association):
+            if i >= 10: # limit number of HPO terms returned
+                break
             if assoc.object:
                 results.append({
                     "mondo_id": mondo_id,

@@ -24,7 +24,6 @@ class BreakdownAgentConfig(BaseSettings):
    results_dir: Path = Field(Path("results"))
    initial_diagnosis_subdir: str = Field("initial_diagnosis")
 
-# avoids hardcoding output directory
    @property
    def output_dir(self) -> Path:
        return self.results_dir / self.initial_diagnosis_subdir

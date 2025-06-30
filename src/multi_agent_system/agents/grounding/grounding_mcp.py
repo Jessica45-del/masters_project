@@ -6,7 +6,6 @@ from typing import Dict, List
 from mcp.server.fastmcp import FastMCP
 from multi_agent_system.agents.grounding.grounding_agent import GROUNDING_SYSTEM_PROMPT
 from multi_agent_system.agents.grounding.grounding_tools import (
-    extract_disease_label,
     find_mondo_id,
     find_disease_knowledge,
 )
@@ -14,20 +13,6 @@ from multi_agent_system.agents.grounding.grounding_tools import (
 
 #Initialise MCP sever
 mcp = FastMCP("grounding", instructions=GROUNDING_SYSTEM_PROMPT)
-
-
-@mcp.tool()
-async def get_disease_label(file_path:str ) -> Dict[str, List[str]]:
-    """Extract candidate disease labels from initial_diagnosis result files
-
-     Args:
-        file_path: The file path of the patient results in the initial diagnosis directory
-
-    Returns:
-        A dictionary to maps each filename stem to the disease labels
-     """
-
-    return await extract_disease_label(file_path)
 
 
 @mcp.tool()

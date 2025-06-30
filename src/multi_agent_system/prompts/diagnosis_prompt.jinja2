@@ -12,27 +12,6 @@ Please would you provide a ranked list of candidate diseases for this phenotypic
 
 2. Based on the phenotype combination, suggest 1–3 initial candidate diseases by name only. **Do not return MONDO IDs**.
 
-Please return the entire output (including all phenotypes and candidate diseases) in a single JSON array
-Provide a score that is the reciprocal of the rank (1/rank)
 
-The output must exactly match the following format:
 
-```json
-{
-  "phenotypes": [
-    {
-      "id": "HP:0004322",
-      "label": "Arachnodactyly",
-      "system": "Musculoskeletal system",
-    },
-    {
-      "id": "HP:0001156",
-      "label": "Joint hypermobility",
-      "system": "Musculoskeletal system"
-    }
-  ],
-  "candidate_diseases": [
-  {"label": "Leigh syndrome", "score": 0.95},
-  {"label": "Mitochondrial encephalopathy", "score": 0.74}
-]
-}
+
