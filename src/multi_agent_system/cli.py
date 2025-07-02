@@ -6,6 +6,7 @@ from pheval.utils.file_utils import all_files
 
 from multi_agent_system.agents.breakdown.breakdown_agent import breakdown_agent
 from multi_agent_system.agents.grounding.grounding_agent import grounding_agent
+from multi_agent_system.agents.similarity_scoring.similarity_agent import similarity_agent
 from multi_agent_system.utils.utils import extract_hpo_ids_and_sex
 
 
@@ -81,6 +82,21 @@ async def run_pipeline_async(phenopacket_dir: str):
             print(result)
         print()
 
+        print("DEBUG: grounding_results.output =", grounding_results.output)
+        print("DEBUG: grounding_results.output just after grounding agent =", grounding_results.output)
+
         # SIMILARITY SCORE AGENT
+        print("[SIMILARITY SCORING AGENT]:")
+        similarity_results = await similarity_agent.run(
+            initial_result = breakdown_result.output,
+            disease_candidates = grounding_results.output,
+        )
+        print("Type of similarity_results.output:", type(similarity_results.output))
+        print("Value:", similarity_results.output) # view raw results
+        for sim_result in similarity_results.output:
+            print(sim_result)
+        print()
+
+
 if __name__ == "__main__":
     cli()

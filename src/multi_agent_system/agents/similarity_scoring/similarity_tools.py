@@ -2,32 +2,75 @@
 Tools for Similarity Scoring Agent
 """
 
-from pathlib import Path
-import json
-from typing import Set, List, Dict
+from typing import Any, Set, List, Dict
+from pydantic import BaseModel
+from multi_agent_system.agents.breakdown.breakdown_tools import InitialDiagnosisResult
+from multi_agent_system.agents.grounding.grounding_tools import GroundedDiseaseResult
 
 
-def get_patient_hpo_ids(file_path: str) -> Set[str]:
-    """
-    Retrieves the patient's observed phenotypes, i.e. HPO IDs from the breakdown agent
-    output file.
+class SimilarityScoreResult(BaseModel):
+    disease_name:str # Candidate disease (from breakdown/grounding agent)")
+    mondo_id:str | None # MONDO ID mapped to candidate disease
+    disease_phenotypes:List[dict] # HPO terms associated with MONDO ID (from grounding agent)
+    similarity_score:float # calculated similarity score using Jaccard index . Comparing patient HPOs and disease HPOs (from similarity scoring agent)
+   #rank: int | None = None
+
+
+def normalize_hpo_terms(phenotypes: List[Any]) -> Set[str]:
+    """Normalize a list of HPO phenotypes, whether dicts or strings, to a set of HPO IDs.
 
     Args:
-        file_path: Path to the initial_diagnosis JSON file.
+        phenotypes: List of HPO terms from patient
 
-    Returns:
-        A set of HPO term IDs.
+    Return:
+        A set of HPO IDs as strings
+
     """
-    print(f"Loading HPO terms from: {file_path}")
+    result = set()
+    for p in phenotypes:
+        if isinstance(p, dict) and "hpo_id" in p:
+            result.add(p["hpo_id"])
+        elif isinstance(p, str):
+            result.add(p)
+        # If it's a Pydantic object, adapt as needed
+        elif hasattr(p, "hpo_term"):
+            result.add(p.hpo_term)
+    return result
 
-    data = json.loads(Path(file_path).read_text())
+def ensure_phenotype_dict_list(phenotypes: list) -> list[dict]:
+    """
+    Ensure a list of dicts, converting strings to dicts with hpo_id as key.
+    Required for SimilarityScoreResult pydantic model.
+    """
+    result = []
+    for p in phenotypes:
+        if isinstance(p, dict):
+            result.append(p)
+        elif isinstance(p, str):
+            result.append({"hpo_id": p})
+        # Optionally, support for Pydantic objects
+        elif hasattr(p, "hpo_term"):
+            result.append({"hpo_id": p.hpo_term})
+    return result
 
-    phenotypes = data[0].get("phenotypes", [])
-    hpo_ids = {p["id"] for p in phenotypes if "id" in p}
-
-    return hpo_ids
 
 
+# extract patient hpo terms
+def extract_patient_hpo_terms(result:InitialDiagnosisResult) -> set[str]:
+    return set (p.hpo_term for p in result.phenotypes)
+
+# extract disease hpo terms
+def extract_disease_hpo_terms(candidate:GroundedDiseaseResult) -> Set[str]:
+    hpo_terms = set()
+    for p in candidate.phenotypes:
+        if isinstance(p, dict) and "hpo_id" in p:
+            hpo_terms.add(p["hpo_id"])
+        elif isinstance(p, str):
+            hpo_terms.add(p)
+    return hpo_terms
+
+
+# computer similarity score
 def calculate_jaccard_index(set1: Set[str], set2: Set[str]) -> float:
     """
     Calculate Jaccard similarity index between two sets.
@@ -45,36 +88,43 @@ def calculate_jaccard_index(set1: Set[str], set2: Set[str]) -> float:
     intersection = len(set1 & set2)
     union = len(set1 | set2)
 
-    if union == 0:
-        return 0.0
-
-    return intersection / union
+    return intersection / union if union > 0 else 0.0
 
 
-async def score_disease_candidates(
-    patient_hpo: Set[str],
-    candidates: List[Dict]
-) -> List[Dict]:
+async def generate_similarity_scores(
+    initial_result: InitialDiagnosisResult,
+    disease_candidates: List[GroundedDiseaseResult],
+) -> List[SimilarityScoreResult]:
+    
     """
-    Score candidate diseases using Jaccard similarity against patient HPOs.
+    For each disease candidate, calculate the Jaccard similarity score between
+    the patient HPO terms and the disease HPO terms, and return a list of results.
 
     Args:
-        patient_hpo: Set of HPO IDs from the patient
-        candidates: List of disease dicts with 'id', 'label', 'phenotypes'
+        initial_result: The InitialDiagnosisResult (from patient breakdown agent output)
+        disease_candidates: List of GroundedDiseaseResult (from grounding agent)
 
     Returns:
-        List of candidate diseases with added similarity 'score'
+        List of SimilarityScoreResult for each candidate disease.
     """
+    print("Received disease_candidates:", disease_candidates)
+    patient_hpo_terms = extract_patient_hpo_terms(initial_result)
     results = []
 
-    for disease in candidates:
-        disease_hpos = {p["hpo_id"] for p in disease.get("phenotypes", [])}
-        score = calculate_jaccard_index(patient_hpo, disease_hpos)
-
-        results.append({
-            "label": disease.get("label"),
-            "id": disease.get("id"),
-            "score": round(score, 4)
-        })
+    for candidate in disease_candidates:
+        print("Processing candidate:", candidate.disease_name, candidate.phenotypes)
+        disease_hpo_terms = extract_disease_hpo_terms(candidate)
+        score = calculate_jaccard_index(patient_hpo_terms, disease_hpo_terms)
+        normalized_phenos = ensure_phenotype_dict_list(candidate.phenotypes)
+        print("Normalized candidate phenotypes:", normalized_phenos)
+        result = SimilarityScoreResult(
+            disease_name=candidate.disease_name,
+            mondo_id=candidate.mondo_id,
+            disease_phenotypes=normalized_phenos,
+            similarity_score=score,
+        )
+        results.append(result)
+        print("Returning similarity results:", results)
 
     return results
+

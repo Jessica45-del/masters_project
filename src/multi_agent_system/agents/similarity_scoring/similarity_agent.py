@@ -1,15 +1,17 @@
 """
-Agent 3: Similarity scoring agent for diagnostic reasoning.
+Similarity Scoring Agent.
 """
+from typing import List
 
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
 from multi_agent_system.agents.similarity_scoring.similarity_config import get_config
-from multi_agent_system.agents.similarity_scoring.similarity_tools import score_disease_candidates
-
-
-# Load configuration (if needed)
+from multi_agent_system.agents.similarity_scoring.similarity_tools import (
+    SimilarityScoreResult,
+    generate_similarity_scores
+)
+# Load configuration
 config = get_config()
 
 # Load LLM model
@@ -21,19 +23,22 @@ model = OpenAIModel(
 
 SIMILARITY_SYSTEM_PROMPT =(
     """
-    You are a diagnostic reasoning agent that compares patient phenotypes with candidate diseases.
-    Your task is to:
-    1. Compare the patient's HPO terms against the phenotype profiles of each candidate disease.
-    2. Accept as input:
-   - A list of patient HPO terms.
-   - A list of disease candidates, where each candidate includes a MONDO ID, disease label, and associated HPO terms.
-   3. Calculate the Jaccard similarity between the patient HPO set and each disease’s phenotype set.
-   4. Return a list of candidate diseases, ranked in descending order of similarity.
-   Each result must include:
-   - `label`: the disease name
-   - `id`: the MONDO identifier
-   - `score`: the similarity score, rounded to 4 decimal places.
-
+    You are a diagnostic reasoning agent specialising in rare disease similarity scoring.
+    You will receive:
+    - A patient's set of observed phenotypes (HPO term IDs), extracted from InitialDiagnosisResult.
+    - A list of candidate diseases, each with a disease name, mapped MONDO ID, 
+    and a list of associated HPO terms (from the grounding agent).
+    Your task :
+    1. For each disease candidate, you must compare the patient’s HPO terms to the disease’s phenotype set 
+    using the Jaccard similarity index, using the 'generate_similarity_scores' function. 
+    2. For each candidate, you must output:
+    - `disease_name`: Disease label
+    - `mondo_id`: MONDO identifier (or null if not found)
+    - `disease_phenotypes`: List of associated HPO terms for that disease
+    - `similarity_score`: The similarity score (float, between 0 and 1), rounded to 4 decimal places.
+    Important:
+    - Only return a **list of SimilarityScoreResult objects** (as JSON). 
+    Do not include explanations, markdown, or any extra text.
     """
 )
 
@@ -42,8 +47,9 @@ SIMILARITY_SYSTEM_PROMPT =(
 # Create the agent
 similarity_agent = Agent(
     model=model,
-    system_prompt=SIMILARITY_SYSTEM_PROMPT
+    system_prompt=SIMILARITY_SYSTEM_PROMPT,
+    output_type = List[SimilarityScoreResult]
 )
 
 #Register tools
-similarity_agent.tool_plain(score_disease_candidates)
+similarity_agent.tool_plain(generate_similarity_scores)
