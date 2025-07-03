@@ -9,7 +9,7 @@ from pydantic_ai.providers.deepseek import DeepSeekProvider
 from multi_agent_system.agents.similarity_scoring.similarity_config import get_config
 from multi_agent_system.agents.similarity_scoring.similarity_tools import (
     SimilarityScoreResult,
-    generate_similarity_scores
+    generate_similarity_scores, extract_patient_hpo_ids, extract_disease_hpo_ids, calculate_jaccard_index
 )
 # Load configuration
 config = get_config()
@@ -24,16 +24,14 @@ model = OpenAIModel(
 SIMILARITY_SYSTEM_PROMPT =(
     """
     You are a diagnostic reasoning agent specialising in rare disease similarity scoring.
-    You will receive:
-    - A patient's set of observed phenotypes (HPO term IDs), extracted from InitialDiagnosisResult.
-    - A list of candidate diseases, each with a disease name, mapped MONDO ID, 
-    and a list of associated HPO terms (from the grounding agent).
-    Your task :
-    1. For each disease candidate, you must compare the patient’s HPO terms to the disease’s phenotype set 
+    You must complete the follow tasks:
+    1. You must extract the patient hpo id from InitialDiagnosisResult using the extract_patient_hpo_ids function.
+    2.You must extract the hpo id from GroundedDiseaseResult using the extract_disease_hpo_ids function.
+    3.For each disease candidate, you must compare the patient’s HPO terms to the disease’s phenotype set 
     using the Jaccard similarity index, using the 'generate_similarity_scores' function. 
-    2. For each candidate, you must output:
+    4. For each candidate, you must output:
     - `disease_name`: Disease label
-    - `mondo_id`: MONDO identifier (or null if not found)
+    - `mondo_id`: MONDO ID (or null if not found)
     - `disease_phenotypes`: List of associated HPO terms for that disease
     - `similarity_score`: The similarity score (float, between 0 and 1), rounded to 4 decimal places.
     Important:
@@ -52,4 +50,7 @@ similarity_agent = Agent(
 )
 
 #Register tools
+similarity_agent.tool_plain(extract_patient_hpo_ids)
+similarity_agent.tool_plain(extract_disease_hpo_ids)
+similarity_agent.tool_plain(calculate_jaccard_index)
 similarity_agent.tool_plain(generate_similarity_scores)
