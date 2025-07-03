@@ -1,6 +1,7 @@
 """
 AGENT 1: Breakdown Agent for diagnostic reasoning
 """
+from typing import List
 
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
@@ -26,7 +27,7 @@ model = OpenAIModel(
 
 BREAKDOWN_SYSTEM_PROMPT = ("""
 You are an expert diagnostic reasoning assistant specializing in rare disease diagnosis.
-You will receive patient cases with HPO (Human Phenotype Ontology) term IDs and patient sex.
+You will receive patient cases with HPO (Human Phenotype Ontology) IDs and patient sex.
 Your task is to analyze this phenotypic data and provide an initial diagnostic assessment.
 
 WORKFLOW - You MUST follow these steps in order:

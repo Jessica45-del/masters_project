@@ -1,7 +1,6 @@
-import json
+
 from functools import lru_cache
-from pathlib import Path
-from typing import Dict, List, Any
+from typing import List, Any
 from oaklib import get_adapter
 from oaklib.implementations import MonarchImplementation
 
@@ -15,9 +14,9 @@ class GroundedDiseaseResult(BaseModel):
     disease_name: str = Field(..., description=" (Initial) Original disease label from breakdown agent")
     mondo_id: str | None = Field(None, description="Grounded MONDO ID, or None if not found")
     phenotypes:list = Field(default_factory=list, description="Phenotype/HPO association")
-    fallback_reason: str | None = Field(None, description="Optional explanation if fallback method used")
 
 
+#reduce threshold
 
 HAS_PHENOTYPE = "biolink:has_phenotype"
 
@@ -110,18 +109,18 @@ async def find_disease_knowledge(mondo_id:str, limit: int =10 ) -> List[dict]:
         results = []
         disease_association = adapter.associations(
             subjects=[mondo_id],
-            predicates=[HAS_PHENOTYPE]
+            #predicates=[HAS_PHENOTYPE]
         )
 
         for i, assoc in enumerate(disease_association):
-            if i >= 10: # limit number of HPO terms returned
+            if i >= 100: # limit number of HPO terms returned
                 break
             if assoc.object:
                 results.append({
                     "mondo_id": mondo_id,
                     "hpo_id": assoc.object,
-                    "predicate": getattr(assoc, "predicate", HAS_PHENOTYPE),
-                    "source": getattr(assoc, "provided_by", None),
+                    #"predicate": getattr(assoc, "predicate", HAS_PHENOTYPE),
+                    #"source": getattr(assoc, "provided_by", None),
                 })
 
         return results

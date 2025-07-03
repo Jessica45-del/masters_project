@@ -20,7 +20,7 @@ class BreakdownAgentConfig(BaseSettings):
    template_file: str   = Field("diagnosis_prompt.jinja2")
 
 
-   # Results directory and subdirectory
+   # Results directory and subdirectory-delete
    results_dir: Path = Field(Path("results"))
    initial_diagnosis_subdir: str = Field("initial_diagnosis")
 
@@ -33,7 +33,7 @@ class BreakdownAgentConfig(BaseSettings):
        populate_by_name=True,
    )
 
-def get_config() -> BreakdownAgentConfig:
+def get_config() -> BreakdownAgentConfig: # delete
    cfg = BreakdownAgentConfig()
    cfg.output_dir.mkdir(parents=True, exist_ok=True)  # Create results/initial_diagnosis
    return cfg

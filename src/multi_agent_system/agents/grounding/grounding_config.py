@@ -12,7 +12,7 @@ class GroundingAgentConfig:
     """Configuration for the Grounding Agent."""
 
     # Max number of search results to return
-    max_search_results: int = 10
+    max_search_results: int = 100
 
     # Monarch adapter for retrieving disease knowledge
     monarch_adapter: Optional[MonarchImplementation] = None
