@@ -32,6 +32,7 @@ async def prepare_prompt(hpo_ids: List[str], sex: str) -> str:
     """
     Prepare diagnostic prompt by rendering HPO IDs and Sex.
     """
+
     print(f"[TOOL CALLED] prepare_prompt with hpo_ids={hpo_ids}, sex={sex}")
     prompt = _template.render(
         hpo_term=", ".join(hpo_ids),

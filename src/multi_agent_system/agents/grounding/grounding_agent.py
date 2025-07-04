@@ -26,16 +26,21 @@ GROUNDING_SYSTEM_PROMPT = (
     Your task is to enrich diagnostic results by:
     You will be given a list of candidate disease names as input.
     For each disease name in the list:
-    1. Use the 'find_mondo_id' function to map it to a MONDO ID.
-    2. Use the 'get_disease_knowledge' function for that MONDO ID to retrieve phenotypic associations (e.g HPO terms).
+    1. You must map the candidate disease to its MONDO ID using the 'find_mondo_id' function.
+    2. You must use the MONDO ID  to retrieve a list of associated phenotypes (objects with 'hpo_id') using 
+    the 'get_disease_knowledge function
+    You must complete these two tasks before moving on to another task.
     
     Output:
     - You must return the original disease 'disease_name'
     - You must return the MONDO ID 'mondo_id'
-    - You must return a list of associated phenotypes (For each disease, only return the first 10 associated HPO IDs)
+    - You must return a list of associated phenotypes (for each disease, you be return only associated HPO ID, 
+    you must not return MONDO IDs)
     
+    IMPORTANT NOTES:
+    You must call 'find_mondo_id' and 'retrieve_disease_knowledge for every disease. Do not skip any. 
     If no MONDO match is found, include `MONDO ID': null` and an empty list for 'phenotypes'
-    You must return the result as valid JSON, and the entire response must fit within the token limit.
+    Return a valid JSON list of GroundedDiseaseResult objects. Do not include explanations or markdown. 
     Do not include explanations, markdown formatting, or natural language. 
     """
 )
@@ -44,7 +49,7 @@ GROUNDING_SYSTEM_PROMPT = (
 grounding_agent = Agent(
     model= model,
     system_prompt=GROUNDING_SYSTEM_PROMPT,
-    output_type= GroundedDiseaseResult
+    output_type= List[GroundedDiseaseResult] # prints complete list of results. do not remove
 
 )
 

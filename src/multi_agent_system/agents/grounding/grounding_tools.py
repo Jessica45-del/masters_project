@@ -59,7 +59,7 @@ async def ground_diseases(labels: List[str] ) -> list[GroundedDiseaseResult]:
                 mondo_id=None,
                 fallback_reason="No MONDO ID found via primary or fallback search"
             ))
-
+    print (results)
     return results
 
 
@@ -109,19 +109,20 @@ async def find_disease_knowledge(mondo_id:str, limit: int =10 ) -> List[dict]:
         results = []
         disease_association = adapter.associations(
             subjects=[mondo_id],
-            #predicates=[HAS_PHENOTYPE]
+           # predicates=[HAS_PHENOTYPE]
         )
 
         for i, assoc in enumerate(disease_association):
-            if i >= 100: # limit number of HPO terms returned
+            if i >= 80: # limit number of HPO terms returned
                 break
             if assoc.object:
                 results.append({
                     "mondo_id": mondo_id,
                     "hpo_id": assoc.object,
-                    #"predicate": getattr(assoc, "predicate", HAS_PHENOTYPE),
-                    #"source": getattr(assoc, "provided_by", None),
+                   # "predicate": getattr(assoc, "predicate", HAS_PHENOTYPE),
+                   # "source": getattr(assoc, "provided_by", None),
                 })
+
 
         return results
 

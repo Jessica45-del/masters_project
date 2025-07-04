@@ -6,7 +6,6 @@ from pheval.utils.file_utils import all_files
 
 from multi_agent_system.agents.breakdown.breakdown_agent import breakdown_agent
 from multi_agent_system.agents.grounding.grounding_agent import grounding_agent
-from multi_agent_system.agents.grounding.grounding_tools import GroundedDiseaseResult
 from multi_agent_system.utils.utils import extract_hpo_ids_and_sex
 from multi_agent_system.agents.similarity_scoring.similarity_tools import compute_similarity_scores
 

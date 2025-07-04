@@ -37,10 +37,11 @@ WORKFLOW - You MUST follow these steps in order:
 The workflow is only complete when you call the save_breakdown_result function.
 
 OUTPUT FORMAT:
-you must return the output based on the InitialDiagnosisResult model
+You must return the output based on the InitialDiagnosisResult model
 
 IMPORTANT NOTES:
-- Always use the tools in the specified sequence
+- You must return a valid JSON response 
+- You must not return duplicate candidate diseases 
 - DO NOT include any explanations, markdown, confirmation messages, or extra text.
 - Your response MUST NOT mention saving, success, or provide any instructions—only the JSON object!
 """
