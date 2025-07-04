@@ -1,34 +1,35 @@
 """
 MCP tools for interacting with the  Similarity Scoring Agent
 """
-from typing import List, Dict, Set
+from typing import List, Dict
 from mcp.server.fastmcp import FastMCP
-
-from multi_agent_system.agents.breakdown.breakdown_tools import InitialDiagnosisResult
-from multi_agent_system.agents.grounding.grounding_tools import GroundedDiseaseResult
 from multi_agent_system.agents.similarity_scoring.similarity_agent import SIMILARITY_SYSTEM_PROMPT
-from multi_agent_system.agents.similarity_scoring.similarity_tools import SimilarityScoreResult, \
-    generate_similarity_scores
+from multi_agent_system.agents.similarity_scoring.similarity_tools import SimilarityScoreResult
+from multi_agent_system.agents.similarity_scoring.similarity_tools import compute_similarity_scores
 
 # Initialise MCP server
 mcp = FastMCP("similarity_scoring", instructions=SIMILARITY_SYSTEM_PROMPT)
 
+
 @mcp.tool()
-async def similarity_scores(
-    initial_result: InitialDiagnosisResult,
-    disease_candidates: List[GroundedDiseaseResult],
+async def calculate_similarity_scores(patient_hpo_ids: List[str],
+    disease_hpo_map: Dict[str, List[str]],
+    disease_names: Dict[str, str] #MONDO ID to disease name
 ) -> List[SimilarityScoreResult]:
+
     """
-    For each disease candidate, calculate the Jaccard similarity score between
-    the patient HPO terms and the disease HPO terms, and return a list of results.
+    Compute similarity scores between patient HPO IDs and each candidate disease (or MONDO ID) HPO IDs
+
 
     Args:
-        initial_result: InitialDiagnosisResult (from breakdown agent
-        disease_candidates: List of GroundDiseaseResult (from grounding agent)
+        patient_hpo_ids: List of patient HPO IDs
+        disease_names: Dictionary mapping MONDO IDs to lists of HPO term IDs for each disease.
+        disease_hpo_map: Dictionary mapping MONDO IDs to disease name (for readability)
 
-    Return:
-        List of candidate diseases with similarity score
-
+    Returns:
+        A List of SimilarityScoreResult objects in descending order of similarity score
     """
 
-    return await generate_similarity_scores(initial_result, disease_candidates) # need to determine the results are
+    return await compute_similarity_scores(patient_hpo_ids=patient_hpo_ids,
+                                           disease_hpo_map=disease_hpo_map,
+                                           disease_names=disease_names)

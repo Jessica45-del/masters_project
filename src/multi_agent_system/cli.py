@@ -6,8 +6,9 @@ from pheval.utils.file_utils import all_files
 
 from multi_agent_system.agents.breakdown.breakdown_agent import breakdown_agent
 from multi_agent_system.agents.grounding.grounding_agent import grounding_agent
-# from multi_agent_system.agents.similarity_scoring.similarity_agent import similarity_agent
+from multi_agent_system.agents.grounding.grounding_tools import GroundedDiseaseResult
 from multi_agent_system.utils.utils import extract_hpo_ids_and_sex
+from multi_agent_system.agents.similarity_scoring.similarity_tools import compute_similarity_scores
 
 
 @click.group()
@@ -39,9 +40,11 @@ async def run_breakdown(phenopacket_dir: str):
         """
 
         print(f"[INFO] Passing to breakdown agent: {breakdown_input}")
-        response = await breakdown_agent.run(hpo_ids=hpo_ids, sex=sex)
-        print(f"[BREAKDOWN RESULT]:\n{response.output}\n")
+        print("[RUNNING BREAKDOWN AGENT]")
+        breakdown_result = await breakdown_agent.run(breakdown_input)
+        print(f"[BREAKDOWN RESULT]:\n{breakdown_result}\n")  # breakdown_result.output = InitialDiagnosisResult
 
+#  poetry run agents run_pipeline --phenopacket-dir multi_agent_system/phenopackets
 
 @cli.command(name="run_pipeline")
 @click.option('--phenopacket-dir', type=click.Path(exists=True), required=True, help='Directory with phenopacket JSON files')
@@ -66,21 +69,79 @@ async def run_pipeline_async(phenopacket_dir: str):
         Patient sex: {sex}
     
         """
+
         print(f"[INFO] Passing to breakdown agent: {breakdown_input}")
+        print("[RUNNING BREAKDOWN AGENT]")
         breakdown_result = await breakdown_agent.run(breakdown_input)
-        print(breakdown_result)
+        print(f"[BREAKDOWN RESULT]:\n{breakdown_result}\n") # breakdown_result.output = InitialDiagnosisResult
+
 
         # GROUNDING AGENT
-        candidate_labels = [d.disease_name for d in breakdown_result.output.candidate_diseases] #extract candidate disease name from InitialDiagnosisResult
-        print("candidate_labels:", candidate_labels)
-        grounding_results = await grounding_agent.run(candidate_labels)
-        print("Type of grounding_results.output:", type(grounding_results.output))
+        # extract candidate disease name from InitialDiagnosisResult
+        # breakdown_result.output is the InitialDiagnosisResult object
 
+        print("[RUNNING GROUNDING AGENT]")
+        candidate_disease_labels = [d.disease_name for d in breakdown_result.output.candidate_diseases]
+
+        print("candidate_disease_labels:", candidate_disease_labels)
+        grounding_results = await grounding_agent.run(candidate_disease_labels)
 
         print("[GROUNDING RESULT]:")
         for result in grounding_results.output:
             print(result)
         print()
+
+
+        print("[RUNNING SIMILARITY SCORING AGENT]")
+
+        # filter out any grounded diseases that are missing a MONDO ID or phenotype
+        filter_groundings = [
+            d for d in grounding_results.output
+            if d.mondo_id and d.phenotypes
+        ]
+
+        print("filter_groundings:", filter_groundings) # check filter_groundings
+
+        # convert to required format as per computer_similarity_scoring function
+
+        disease_hpo_map = {d.mondo_id: d.phenotypes for d in filter_groundings} # disease_hpo_map becomes a Dict[str, List[str]]→ MONDO ID → list of HPO terms
+        disease_names = {d.mondo_id: d.disease_name for d in filter_groundings} #disease_names becomes a Dict[str, str]→ MONDO ID → readable disease name
+
+        similarity_results = await compute_similarity_scores(
+            patient_hpo_ids=hpo_ids,
+            disease_hpo_map=disease_hpo_map,
+            disease_names=disease_names)
+
+        for result in similarity_results:
+            print(result.model_dump_json(indent=2))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
         # # SIMILARITY SCORE AGENT
@@ -96,6 +157,13 @@ async def run_pipeline_async(phenopacket_dir: str):
         #     print(sim_result)
         # print()
 
+        # print(hpo_ids) # THIS PRINTS ORIGINAL HPO TERMS
+
+        # similarity_result = await similarity_agent.run({
+        #     "patient_hpo_terms": hpo_ids,
+        #     "candidate_diseases": grounding_results.output
+        # })
+        # print(f"[SIMILARITY RESULT] {phenopacket_path.stem}:\n{similarity_result.output}")
 
 if __name__ == "__main__":
     cli()

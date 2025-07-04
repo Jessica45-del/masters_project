@@ -2,75 +2,28 @@
 Tools for Similarity Scoring Agent
 """
 
-from typing import Any, Set, List, Dict
+from typing import Set, List, Dict
 from pydantic import BaseModel
+
 from multi_agent_system.agents.breakdown.breakdown_tools import InitialDiagnosisResult
+from multi_agent_system.agents.similarity_scoring.similarity_config import get_config
 from multi_agent_system.agents.grounding.grounding_tools import GroundedDiseaseResult
 
-
+# Model output for similarity agent
 class SimilarityScoreResult(BaseModel):
     disease_name:str # Candidate disease (from breakdown/grounding agent)")
     mondo_id:str | None # MONDO ID mapped to candidate disease
-    disease_phenotypes:List[dict] # HPO terms associated with MONDO ID (from grounding agent)
     similarity_score:float # calculated similarity score using Jaccard index . Comparing patient HPOs and disease HPOs (from similarity scoring agent)
-   #rank: int | None = None
 
 
-def normalize_hpo_terms(phenotypes: List[Any]) -> Set[str]:
-    """Normalize a list of HPO phenotypes, whether dicts or strings, to a set of HPO IDs.
-
-    Args:
-        phenotypes: List of HPO terms from patient
-
-    Return:
-        A set of HPO IDs as strings
-
-    """
-    result = set()
-    for p in phenotypes:
-        if isinstance(p, dict) and "hpo_id" in p:
-            result.add(p["hpo_id"])
-        elif isinstance(p, str):
-            result.add(p)
-        # If it's a Pydantic object, adapt as needed
-        elif hasattr(p, "hpo_term"):
-            result.add(p.hpo_term)
-    return result
-
-def ensure_phenotype_dict_list(phenotypes: list) -> list[dict]:
-    """
-    Ensure a list of dicts, converting strings to dicts with hpo_id as key.
-    Required for SimilarityScoreResult pydantic model.
-    """
-    result = []
-    for p in phenotypes:
-        if isinstance(p, dict):
-            result.append(p)
-        elif isinstance(p, str):
-            result.append({"hpo_id": p})
-        # Optionally, support for Pydantic objects
-        elif hasattr(p, "hpo_term"):
-            result.append({"hpo_id": p.hpo_term})
-    return result
+# No need to re-extract HPO as this has already been done in cli, through extract hpo
+# terms function from utils.py
 
 
 
-# extract patient hpo terms
-def extract_patient_hpo_terms(result:InitialDiagnosisResult) -> set[str]:
-    return set (p.hpo_term for p in result.phenotypes)
-
-# extract disease hpo terms
-def extract_disease_hpo_terms(candidate:GroundedDiseaseResult) -> Set[str]:
-    hpo_terms = set()
-    for p in candidate.phenotypes:
-        if isinstance(p, dict) and "hpo_id" in p:
-            hpo_terms.add(p["hpo_id"])
-        elif isinstance(p, str):
-            hpo_terms.add(p)
-    return hpo_terms
 
 
-# computer similarity score
+# define jaccard index equation
 def calculate_jaccard_index(set1: Set[str], set2: Set[str]) -> float:
     """
     Calculate Jaccard similarity index between two sets.
@@ -91,40 +44,50 @@ def calculate_jaccard_index(set1: Set[str], set2: Set[str]) -> float:
     return intersection / union if union > 0 else 0.0
 
 
-async def generate_similarity_scores(
-    initial_result: InitialDiagnosisResult,
-    disease_candidates: List[GroundedDiseaseResult],
+# compute jaccard index for patient hpo_ids and hpo_ids associated with MONDO IDs (candidate diseases)
+async def compute_similarity_scores(
+    patient_hpo_ids: List[str],
+    disease_hpo_map: Dict[str, List[str]],
+    disease_names: Dict[str, str] #MONDO ID to disease name
 ) -> List[SimilarityScoreResult]:
-    
+
     """
-    For each disease candidate, calculate the Jaccard similarity score between
-    the patient HPO terms and the disease HPO terms, and return a list of results.
+    Compute similarity scores between patient HPO IDs and each candidate disease (or MONDO ID) HPO IDs
+
+
 
     Args:
-        initial_result: The InitialDiagnosisResult (from patient breakdown agent output)
-        disease_candidates: List of GroundedDiseaseResult (from grounding agent)
+        patient_hpo_ids: List of patient HPO IDs
+        disease_names: Dictionary mapping MONDO IDs to lists of HPO term IDs for each disease.
+        disease_hpo_map: Dictionary mapping MONDO IDs to disease name (for readability)
 
-    Returns:
-        List of SimilarityScoreResult for each candidate disease.
+
+        Returns:
+            A List of SimilarityScoreResult objects in descending order of similarity score
     """
-    print("Received disease_candidates:", disease_candidates)
-    patient_hpo_terms = extract_patient_hpo_terms(initial_result)
-    results = []
+    patient_set = set(patient_hpo_ids)
+    results = [] # store similarity results in a list
 
-    for candidate in disease_candidates:
-        print("Processing candidate:", candidate.disease_name, candidate.phenotypes)
-        disease_hpo_terms = extract_disease_hpo_terms(candidate)
-        score = calculate_jaccard_index(patient_hpo_terms, disease_hpo_terms)
-        normalized_phenos = ensure_phenotype_dict_list(candidate.phenotypes)
-        print("Normalized candidate phenotypes:", normalized_phenos)
-        result = SimilarityScoreResult(
-            disease_name=candidate.disease_name,
-            mondo_id=candidate.mondo_id,
-            disease_phenotypes=normalized_phenos,
-            similarity_score=score,
-        )
-        results.append(result)
-        print("Returning similarity results:", results)
+    # iterate of each disease
+    for mondo_id, disease_hpos in disease_hpo_map.items():
+        print("Disease:", mondo_id)
+        print("HPO terms:", disease_hpos)
 
-    return results
+        disease_set = set(disease_hpos)
+        score = calculate_jaccard_index(patient_set, disease_set)
+        results.append(SimilarityScoreResult(
+            disease_name=disease_names.get(mondo_id, "Unknown"),
+            mondo_id=mondo_id,
+            similarity_score=score
+        ))
 
+    return sorted(results, key=lambda x: x.similarity_score, reverse=True) #sort in descending order
+
+
+# output for teh above
+#
+# results = [
+#     SimilarityScoreResult(disease_name="A", mondo_id="MONDO:1", similarity_score=0.2),
+#     SimilarityScoreResult(disease_name="B", mondo_id="MONDO:2", similarity_score=0.8),
+#     SimilarityScoreResult(disease_name="C", mondo_id="MONDO:3", similarity_score=0.5),
+# ]
