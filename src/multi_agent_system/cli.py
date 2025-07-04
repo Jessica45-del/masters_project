@@ -115,54 +115,5 @@ async def run_pipeline_async(phenopacket_dir: str):
             print(result.model_dump_json(indent=2))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # # SIMILARITY SCORE AGENT
-        # print("[SIMILARITY SCORING AGENT]:")
-        #
-        # similarity_results = await similarity_agent.run(
-        #     initial_result = breakdown_result.output,
-        #     disease_candidates = grounding_results.output,
-        # )
-        # print("Type of similarity_results.output:", type(similarity_results.output))
-        # print("Value:", similarity_results.output) # view raw results
-        # for sim_result in similarity_results.output:
-        #     print(sim_result)
-        # print()
-
-        # print(hpo_ids) # THIS PRINTS ORIGINAL HPO TERMS
-
-        # similarity_result = await similarity_agent.run({
-        #     "patient_hpo_terms": hpo_ids,
-        #     "candidate_diseases": grounding_results.output
-        # })
-        # print(f"[SIMILARITY RESULT] {phenopacket_path.stem}:\n{similarity_result.output}")
-
 if __name__ == "__main__":
     cli()
