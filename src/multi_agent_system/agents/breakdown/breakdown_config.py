@@ -20,21 +20,25 @@ class BreakdownAgentConfig(BaseSettings):
    template_file: str   = Field("diagnosis_prompt.jinja2")
 
 
-   # Results directory and subdirectory-delete
-   results_dir: Path = Field(Path("results"))
-   initial_diagnosis_subdir: str = Field("initial_diagnosis")
+   # # Results directory and subdirectory-delete
+   # results_dir: Path = Field(Path("results"))
+   # initial_diagnosis_subdir: str = Field("initial_diagnosis")
 
-   @property
-   def output_dir(self) -> Path:
-       return self.results_dir / self.initial_diagnosis_subdir
+   # @property
+   # def output_dir(self) -> Path:
+   #     return self.results_dir / self.initial_diagnosis_subdir
 
    model_config = SettingsConfigDict(
        env_prefix="",
        populate_by_name=True,
    )
 
-def get_config() -> BreakdownAgentConfig: # delete
+def get_config() -> BreakdownAgentConfig:
    cfg = BreakdownAgentConfig()
-   cfg.output_dir.mkdir(parents=True, exist_ok=True)  # Create results/initial_diagnosis
    return cfg
+
+# def get_config() -> BreakdownAgentConfig: # delete
+#    cfg = BreakdownAgentConfig()
+#    cfg.output_dir.mkdir(parents=True, exist_ok=True)  # Create results/initial_diagnosis
+#    return cfg
 
