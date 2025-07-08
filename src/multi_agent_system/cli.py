@@ -91,6 +91,8 @@ async def run_pipeline_async(phenopacket_dir: str):
         print()
 
 
+        # SIMILARITY AGENT
+
         print("[RUNNING SIMILARITY SCORING AGENT]")
 
         # filter out any grounded diseases that are missing a MONDO ID or phenotype
@@ -101,16 +103,25 @@ async def run_pipeline_async(phenopacket_dir: str):
 
         print("filter_groundings:", filter_groundings) # check filter_groundings
 
-        # convert to required format as per computer_similarity_scoring function
+        # convert to required format as per compute_similarity_scoring function in similarity_tools.py
 
         disease_hpo_map = {d.mondo_id: d.phenotypes for d in filter_groundings} # disease_hpo_map becomes a Dict[str, List[str]]→ MONDO ID → list of HPO terms
         disease_names = {d.mondo_id: d.disease_name for d in filter_groundings} #disease_names becomes a Dict[str, str]→ MONDO ID → readable disease name
 
+        cosine_scores = {
+            d.mondo_id:d.cosine_score  # create {MONDO:000123": 0.82}
+            for d in filter_groundings # loop through filtered groundings, only have asscoiated HPO phenotype
+            if d.mondo_id and d.cosine_score is not None # ensure mondo id is not none and cosine score is computed
+        }
+
         similarity_results = await compute_similarity_scores(
             patient_hpo_ids=hpo_ids,
             disease_hpo_map=disease_hpo_map,
-            disease_names=disease_names)
+            disease_names=disease_names,
+            cosine_scores=cosine_scores #pass cosine scores
+        )
 
+        print("Similarity score results")
         for result in similarity_results:
             print(result.model_dump_json(indent=2))
 
