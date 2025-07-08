@@ -51,12 +51,10 @@ SIMILARITY_SYSTEM_PROMPT = (
        and each disease.
        - This function expects `patient_hpo_ids`, `disease_hpo_map`, and `disease_names` as arguments.
        - It returns a list of `SimilarityScoreResult` objects, each containing a `mondo_id`, `disease_name`, 
-         and `similarity_score`.
+       `jaccard_similarity_score` and 'cosine_similarity_score'.
 
     2. Sort the results by similarity score in descending order (from highest to lowest).
-
-    3. Return only the sorted list of `SimilarityScoreResult` objects in valid JSON format.
-    
+    3. You must return the sorted full list of `SimilarityScoreResult` objects in valid JSON format.
     Output rules:
     - Do NOT include any extra text, markdown, commentary, or explanations.
     - Output MUST be only a JSON array of `SimilarityScoreResult` objects.
@@ -64,13 +62,9 @@ SIMILARITY_SYSTEM_PROMPT = (
         - `mondo_id` (str)
         - `disease_name` (str)
         - `similarity_score` (float)
+        -`cosine_similarity_score`(float)
     """
 )
-
-
-
-
-
 
 
 # Create the agent

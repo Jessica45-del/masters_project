@@ -5,7 +5,7 @@ from oaklib import get_adapter
 from oaklib.implementations import MonarchImplementation
 
 from multi_agent_system.agents.breakdown.breakdown_tools import InitialDiagnosisResult
-from multi_agent_system.utils.grounding_utils import search_mondo_fallback
+from multi_agent_system.utils.grounding_utils import cosine_similarity
 
 
 from pydantic import BaseModel, Field
@@ -14,7 +14,7 @@ class GroundedDiseaseResult(BaseModel):
     disease_name: str = Field(..., description=" (Initial) Original disease label from breakdown agent")
     mondo_id: str | None = Field(None, description="Grounded MONDO ID, or None if not found")
     phenotypes:list = Field(default_factory=list, description="Phenotype/HPO association")
-
+    cosine_score: float | None = Field(None, description="Cosine similarity score")
 
 #reduce threshold
 
@@ -43,12 +43,15 @@ async def ground_diseases(labels: List[str] ) -> list[GroundedDiseaseResult]:
     results = [] # collect grounded disease results with MONDO IDs
     for label in labels:
         grounding = await find_mondo_id(label)
+        print(f"\n[DEBUG] Grounding result for '{label}': {grounding}")
+
 
         # if MONDO ID is found
         if "id" in grounding and grounding["id"]:
             results.append(GroundedDiseaseResult(
                 disease_name=label,
                 mondo_id=grounding["id"],
+                cosine_score=grounding.get("cosine_score"),
                 fallback_reason=None
             ))
 
@@ -57,9 +60,13 @@ async def ground_diseases(labels: List[str] ) -> list[GroundedDiseaseResult]:
             results.append(GroundedDiseaseResult(
                 disease_name=label,
                 mondo_id=None,
+                cosine_score= grounding.get("cosine_score"),
                 fallback_reason="No MONDO ID found via primary or fallback search"
+
             ))
-    print (results)
+
+
+    # print(results)
     return results
 
 
@@ -80,15 +87,17 @@ async def find_mondo_id(label:str) -> dict[str, str | Any] | dict[str, str | Non
 
     try:
         results = list(adapter.basic_search(label))
-        if results and not isinstance(results[0], str):
-            hit = results[0]
-            print(f"Found match: {hit.id}")
-            return {"label": label, "id": hit.id}
+        mondo_results = [r for r in results if str(r).startswith("MONDO:")]
+
+        if mondo_results:
+            hit = mondo_results[0]
+            print(f"[Exact Match] Found MONDO ID: {hit}")
+            return {"label": label, "id": hit}
     except Exception as e:
-        print(f"Failed to ground '{label}': {e}")
+        print(f"[ERROR] Exact search failed for '{label}': {e}")
 
     # Fallback to cosine similarity if exact (i.e. basic search) match fails
-    return search_mondo_fallback(label)
+    return cosine_similarity(label)
 
 
 async def find_disease_knowledge(mondo_id:str, limit: int =10 ) -> List[dict]:

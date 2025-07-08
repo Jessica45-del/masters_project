@@ -40,7 +40,7 @@ GROUNDING_SYSTEM_PROMPT = (
     IMPORTANT NOTES:
     You must call 'find_mondo_id' and 'retrieve_disease_knowledge for every disease. Do not skip any. 
     If no MONDO match is found, include `MONDO ID': null` and an empty list for 'phenotypes'
-    Return a valid JSON list of GroundedDiseaseResult objects. Do not include explanations or markdown. 
+    You must only return a valid JSON list of GroundedDiseaseResult objects.  
     Do not include explanations, markdown formatting, or natural language. 
     """
 )

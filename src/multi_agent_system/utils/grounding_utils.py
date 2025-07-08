@@ -30,11 +30,11 @@ def get_embedding(label: str) -> np.ndarray:
     return embedding.astype("float32")
 
 # Use cosine similarity to find most likely MONDO ID match
-def search_mondo_fallback(label: str, k: int = 1, threshold: float = 0.75) -> dict:
+def cosine_similarity(label: str, k: int = 1, threshold: float = 0.75) -> dict:
     """ Similarity search using FAISS with cosine similarity
 
     Args:
-        label (str): label of the mondo
+        label (str): label (i.e. disease name) associated with the mondo
         k (int): number of nearest neighbors
         threshold (float): threshold of similarity
 
@@ -47,12 +47,37 @@ def search_mondo_fallback(label: str, k: int = 1, threshold: float = 0.75) -> di
     embedding = get_embedding(label)
     D, I = index.search(embedding, k)
 
-    score = D[0][0]
-    if score >= threshold and I[0][0] < len(labels):
-        match_label = labels[I[0][0]]
-        match_id = ids[I[0][0]]
-        print(f"[Cosine Similarity Match] '{label}' → '{match_label}' ({match_id}) with score {score:.4f}")
-        return {"label": match_label, "id": match_id}
+    cosine_score = D[0][0]
+    if cosine_score >= threshold and I[0][0] < len(labels): # check if cosine score above threshold + checks if FAISS index is valid
+        match_label = labels[I[0][0]] # retrieve matched label (best matching MONDO disease name) from the labels list using FAISS index
+        match_id = ids[I[0][0]] # retrieve the associated MONDO ID
 
-    print(f"[No Strong Match found] '{label}' scored {score:.4f}. No match above threshold {threshold}")
-    return {"label": label, "id": None}
+        if isinstance(match_id, str) and match_id.startswith("MONDO:"):
+            print(f"[Cosine Similarity Match] '{label}' → '{match_label}' ({match_id}) with score {cosine_score:.4f}")
+            return {"label": match_label, "id": match_id, "cosine_score": float(cosine_score)}
+
+        else:
+            print(f"[Invalid Match ID] '{label}' matched '{match_label}' but returned non-MONDO ID: {match_id}")
+            print(
+                f"[No Valid MONDO Match] '{label}' scored {cosine_score:.4f}, but the best match ID was not a MONDO ID (got: {match_id})")
+
+
+    elif cosine_score < threshold:
+        # fallback if either cosine score is too low or ID is invalid
+        print(f"[No Strong Match found] '{label}' scored {cosine_score:.4f}. No match above threshold {threshold}")
+
+    return {
+        "label": label,
+        "id": "MONDO ID not found",
+
+    }
+
+#TEST
+
+# if __name__ == "__main__":
+#     test_label = "glutaric aciduria type 1"
+#     print(f"Searching for MONDO ID for label: {test_label}")
+#     result = cosine_similarity(test_label)
+#
+#     print("\nResult:")
+#     print(result)
