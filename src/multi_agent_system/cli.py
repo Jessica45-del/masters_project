@@ -6,6 +6,7 @@ from pheval.utils.file_utils import all_files
 
 from multi_agent_system.agents.breakdown.breakdown_agent import breakdown_agent
 from multi_agent_system.agents.grounding.grounding_agent import grounding_agent
+from multi_agent_system.agents.similarity_scoring.similarity_agent import similarity_agent
 from multi_agent_system.utils.utils import extract_hpo_ids_and_sex
 from multi_agent_system.agents.similarity_scoring.similarity_tools import compute_similarity_scores
 
@@ -94,7 +95,6 @@ async def run_pipeline_async(phenopacket_dir: str):
         # SIMILARITY AGENT
 
         print("[RUNNING SIMILARITY SCORING AGENT]")
-
         # filter out any grounded diseases that are missing a MONDO ID or phenotype
         filter_groundings = [
             d for d in grounding_results.output
@@ -114,16 +114,22 @@ async def run_pipeline_async(phenopacket_dir: str):
             if d.mondo_id and d.cosine_score is not None # ensure mondo id is not none and cosine score is computed
         }
 
-        similarity_results = await compute_similarity_scores(
-            patient_hpo_ids=hpo_ids,
-            disease_hpo_map=disease_hpo_map,
-            disease_names=disease_names,
-            cosine_scores=cosine_scores #pass cosine scores
-        )
+        agent_input = {
+            "patient_hpo_ids": hpo_ids,
+            "disease_hpo_map": disease_hpo_map,
+            "disease_names": disease_names,
+            "cosine_scores": cosine_scores,
+            "phenopacket_id": phenopacket_path.stem
+        }
 
-        print("Similarity score results")
-        for result in similarity_results:
-            print(result.model_dump_json(indent=2))
+        similarity_results = await similarity_agent.run(agent_input)
+
+        print("[DEBUG] Agent output object:", similarity_results)
+        print("[DEBUG] Agent tool calls:", similarity_results.tool_calls if hasattr(similarity_results, 'tool_calls') else 'No tool_calls')
+
+        # print("Similarity score results")
+        # for result in similarity_results.output:
+        #     print(result.model_dump_json(indent=2))
 
 
 if __name__ == "__main__":

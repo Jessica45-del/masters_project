@@ -2,6 +2,7 @@
 Tools for Similarity Scoring Agent
 """
 import csv
+from functools import lru_cache
 from pathlib import Path
 from typing import Set, List, Dict
 from pydantic import BaseModel
@@ -61,19 +62,20 @@ async def compute_similarity_scores(
         patient_hpo_ids: List of patient HPO IDs
         disease_names: Dictionary mapping MONDO IDs to lists of HPO term IDs for each disease.
         disease_hpo_map: Dictionary mapping MONDO IDs to disease name (for readability)
+        cosine_scores: Dictionary of cosine similarity scores of diseases, where MONDO id was not found through basic search
 
-
-        Returns:
-            A List of SimilarityScoreResult objects in descending order of similarity score
+    Returns:
+        A List of SimilarityScoreResult objects in descending order of similarity score
     """
+    print("[TOOL CALLED]Computing similarity scores")
     cosine_scores = cosine_scores or {}
     patient_set = set(patient_hpo_ids)
     results = [] # store similarity results in a list
 
     # iterate of each disease
     for mondo_id, disease_hpos in disease_hpo_map.items():
-        print("Disease:", mondo_id) # mondo ID mapped to candidate disease
-        print("HPO terms:", disease_hpos)
+        print("Candidate disease Mondo ID :", mondo_id) # mondo ID mapped to candidate disease
+        print("Associated HPO terms:", disease_hpos)
 
         disease_set = set(disease_hpos)
         score = calculate_jaccard_index(patient_set, disease_set)
@@ -90,32 +92,34 @@ async def compute_similarity_scores(
 
 
 # save final prioritised list of candidate diseases
-async def save_agent_results(results: List[SimilarityScoreResult], output_dir: Path, phenopacket_id: str) -> None:
+# @lru_cache
+async def save_agent_results(results: List[SimilarityScoreResult], phenopacket_id: str, output_dir: Path = Path("agent_result")) -> None:
     """
     Save final list of ranked disease to agent_results folder
 
     Args:
         results: List of SimilarityScoreResult objects in descending order of similarity score
-        output_dir: Path to output folder
-        phenopacket_id: patient identifier that is used to name the file
-
-    Returns:
-        None
+        output_dir: Path to output (agent_results)  folder
+        phenopacket_id: patient identifier that is used to name the tsv file.
     """
 
-    # create
+    print("[TOOL CALLED]Saving agent results")
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"{phenopacket_id}-agents.tsv"
 
-    with output_path.open("w", newline="") as f:
-        writer = csv.writer(f, delimiter="\t")
-        writer.writerow(["rank", "score", "disease"])  # header
+    print(f"[INFO] Writing results to: {output_path.resolve()}")
 
-        with output_path.open("w") as f:
-            # Write the header
-            f.write("rank\tscore\tdisease\n")
+    try:
+        with output_path.open("w", newline='', encoding='utf-8') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerow(["Rank", "Score", "Disease", "MONDO_ID"])
 
-            # Write each ranked result
             for rank, result in enumerate(results, start=1):
-                score = round(1 / rank, 4)  # reciprocal score (rounded to 4 decimals)
-                f.write(f"{rank}\t{score}\t{result.disease_name}\n")
+                score = round(1 / rank, 4)
+                writer.writerow([rank, score, result.disease_name, result.mondo_id])
+
+        print(f"[SUCCESS] Results successfully saved to: {output_path.name}")
+    except IOError as e:
+        print(f"[ERROR] Failed to write results: {e}")
+        raise
+
