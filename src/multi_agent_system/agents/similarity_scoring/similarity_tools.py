@@ -85,10 +85,13 @@ async def compute_similarity_scores(
             disease_name=disease_names.get(mondo_id, "Unknown"),
             mondo_id=mondo_id,
             jaccard_similarity_score=score,
-            cosine_similarity_score=cosine_scores.get(mondo_id # get score for disease
+            cosine_similarity_score=cosine_scores.get(mondo_id
         )))
 
-    return sorted(results, key=lambda x: x.jaccard_similarity_score, reverse=True) #sort  jaccard index score (only) in descending order
+        print(f"[DEBUG] Total diseases scored: {len(results)}")
+        print("Disease names scored:", [r.disease_name for r in results])
+
+    return sorted(results, key=lambda x: x.jaccard_similarity_score, reverse=True)[:9] #sort  jaccard index score (only) in descending order
 
 
 # save final prioritised list of candidate diseases

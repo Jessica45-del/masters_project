@@ -29,30 +29,23 @@ SIMILARITY_SYSTEM_PROMPT = (
     a final prioritised list of candidate diseases associated with the patient phenotypic profile 
     - Each disease is annotated with a set of HPO terms describing its known phenotype profile.
 
-    You will be provided:
-    - `patient_hpo_ids`: a list of HPO terms observed in a patient.
-      Example: ["HP:0000256", "HP:0000505"]
+    You will receive the following input data as function arguments:
 
-    - `disease_hpo_map`: a dictionary where each MONDO ID maps to a list of HPO terms.
-      Example:
-      {
-        "MONDO:0015229": ["HP:0000256", "HP:0000505"],
-        "MONDO:0008763": ["HP:0000556", "HP:0000618"]
-      }
+    - `patient_hpo_ids`: List[str] – HPO terms from the patient's phenopacket.
+    - `disease_hpo_map`: Dict[str, List[str]] – mapping from MONDO ID to disease HPO terms.
+    - `disease_names`: Dict[str, str] – mapping from MONDO ID to readable disease name. You must return 9 disease names 
+    - `cosine_scores`: Dict[str, float or None] – mapping from MONDO ID to cosine similarity scores (if available).
 
-    - `disease_names`: a dictionary mapping MONDO IDs to disease names.
-      Example:
-      {
-        "MONDO:0015229": "Bardet-Biedl syndrome",
-        "MONDO:0008763": "Alström syndrome"
-      }
+    Do not fabricate diseases or use any hardcoded examples. 
+    Always compute similarity only using the provided arguments.
     
     Perform the following steps:
     1. You must use the `compute_similarity_scores` function to calculate similarity scores 
        - This function expects `patient_hpo_ids`, `disease_hpo_map`, `disease_names` and cosine_scores as arguments 
        (the cosine_score may be null and this is still valid)
-       You must use this tool and not attempt to calculate similarity manually
-       - It returns a list of `SimilarityScoreResult` objects, each containing a `mondo_id`, `disease_name`, 
+       You must use the 'compute_similarity_score to calculate the jaccard similarity score. 
+       You must not attempt to calculate jaccard similarity manually
+       - You must return a list of `SimilarityScoreResult` objects, each containing a `mondo_id`, `disease_name`, 
        `jaccard_similarity_score` and 'cosine_similarity_score'.
 
     2. You must use the available similarity scores form the list of `SimilarityScoreResult` objects to 
@@ -61,15 +54,18 @@ SIMILARITY_SYSTEM_PROMPT = (
      - If only `jaccard_score` is available, rank using that alone.
      - You must provide the rank from 1 (most likely) to 9 (least likely)
     
-    3. You must use the SimilarityScoreResult object which contains the 9 predicted diseases and 
-    return the the top 9 diseases as a final prioritised ranked list. 
-    
+    3. After calling `compute_similarity_scores`, you will receive a full list of scored diseases.
+    You must:
+    - Sort the list using both Jaccard and cosine similarity (when available), using your reasoning.
+    - Truncate the list to the top 9 most similar diseases.
+    - Assign a final score of 1/rank for each (1.0 for first, 0.5 for second, etc.)
+    - Pass that list to `save_agent_results` and also return it.
     4. You must assign a final score to each disease as the reciprocal of its rank (1 for the top-ranked
     disease, 0.5 the second, etc.).
     
     5. After ranking, you must call the save_agent_results providing:
     - results: the ranked list of 9 SimilarityScoreResult objects
-    - phenopacket_id: the phenopacket patient identifier (e.g., "Abdul_Wahab-2016-GCDH-Patient_5"). 
+    - phenopacket_id: the phenopacket patient identifier. 
     Use this when calling `save_agent_results`.
     
     The output TSV header must be Rank\tScore\tDisease\tMONDO ID ("The output TSV must include the following
@@ -90,7 +86,7 @@ SIMILARITY_SYSTEM_PROMPT = (
 similarity_agent = Agent(
     model=model,
     system_prompt=SIMILARITY_SYSTEM_PROMPT,
-    output_type = List[SimilarityScoreResult]
+    output_type = SimilarityScoreResult
 )
 
 #Register tools

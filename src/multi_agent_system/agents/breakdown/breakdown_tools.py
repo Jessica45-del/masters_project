@@ -15,7 +15,7 @@ class Phenotype(BaseModel):
 
 class CandidateDisease(BaseModel):
     disease_name: str = Field(..., description="Disease label")
-    # score: float = Field(..., description="Reciprocal rank score")
+
 
 class InitialDiagnosisResult(BaseModel):
     phenotypes: List[Phenotype]

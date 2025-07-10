@@ -1,4 +1,6 @@
 import asyncio
+import json
+
 import click
 from pathlib import Path
 
@@ -94,7 +96,7 @@ async def run_pipeline_async(phenopacket_dir: str):
 
         # SIMILARITY AGENT
 
-        print("[RUNNING SIMILARITY SCORING AGENT]")
+        print("[PRE-PROCESSING FOR SIMILARITY SCORING AGENT]")
         # filter out any grounded diseases that are missing a MONDO ID or phenotype
         filter_groundings = [
             d for d in grounding_results.output
@@ -110,7 +112,7 @@ async def run_pipeline_async(phenopacket_dir: str):
 
         cosine_scores = {
             d.mondo_id:d.cosine_score  # create {MONDO:000123": 0.82}
-            for d in filter_groundings # loop through filtered groundings, only have asscoiated HPO phenotype
+            for d in filter_groundings # loop through filtered groundings, only have associated HPO phenotype
             if d.mondo_id and d.cosine_score is not None # ensure mondo id is not none and cosine score is computed
         }
 
@@ -122,10 +124,13 @@ async def run_pipeline_async(phenopacket_dir: str):
             "phenopacket_id": phenopacket_path.stem
         }
 
+        print("[RUNNING SIMILARITY SCORING AGENT]")
+        print("[DEBUG] Agent input being passed to similarity_agent:")
+        print(json.dumps(agent_input, indent=2))
+
         similarity_results = await similarity_agent.run(agent_input)
 
         print("[DEBUG] Agent output object:", similarity_results)
-        print("[DEBUG] Agent tool calls:", similarity_results.tool_calls if hasattr(similarity_results, 'tool_calls') else 'No tool_calls')
 
         # print("Similarity score results")
         # for result in similarity_results.output:
