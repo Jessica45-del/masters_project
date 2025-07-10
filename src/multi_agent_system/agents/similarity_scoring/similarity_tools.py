@@ -2,25 +2,23 @@
 Tools for Similarity Scoring Agent
 """
 import csv
-from functools import lru_cache
+#from functools import lru_cache
 from pathlib import Path
 from typing import Set, List, Dict
-from pydantic import BaseModel
-
-from multi_agent_system.agents.breakdown.breakdown_tools import InitialDiagnosisResult
+#from pydantic import BaseModel
 from multi_agent_system.agents.similarity_scoring.similarity_config import get_config
-from multi_agent_system.agents.grounding.grounding_tools import GroundedDiseaseResult
+
 
 
 
 get_config()
 
 # Model output for similarity agent
-class SimilarityScoreResult(BaseModel):
-    disease_name:str # Candidate disease (from breakdown/grounding agent)")
-    mondo_id:str | None # MONDO ID mapped to candidate disease
-    jaccard_similarity_score:float # calculated similarity score using Jaccard index . Comparing patient HPOs and disease HPOs (from similarity scoring agent)
-    cosine_similarity_score:float | None
+# class SimilarityScoreResult(BaseModel):
+#     disease_name:str # Candidate disease (from breakdown/grounding agent)")
+#     mondo_id:str | None # MONDO ID mapped to candidate disease
+#     jaccard_similarity_score:float # calculated similarity score using Jaccard index . Comparing patient HPOs and disease HPOs (from similarity scoring agent)
+#     cosine_similarity_score:float | None
 
 # No need to re-extract HPO as this has already been done in cli, through extract hpo
 # terms function from utils.py
@@ -53,7 +51,7 @@ async def compute_similarity_scores(
     disease_hpo_map: Dict[str, List[str]],
     disease_names: Dict[str, str], #MONDO ID to disease name
     cosine_scores: Dict[str, float | None] | None = None
-) -> List[SimilarityScoreResult]:
+) -> List[dict]:
 
     """
     Compute similarity scores between patient HPO IDs and each candidate disease (or MONDO ID) HPO IDs
@@ -65,9 +63,9 @@ async def compute_similarity_scores(
         cosine_scores: Dictionary of cosine similarity scores of diseases, where MONDO id was not found through basic search
 
     Returns:
-        A List of SimilarityScoreResult objects in descending order of similarity score
+        A list of candidate diseases with similarity scores
     """
-    print("[TOOL CALLED]Computing similarity scores")
+    print("[TOOL CALLED]Computing Similarity (JACCARD) Score!")
     cosine_scores = cosine_scores or {}
     patient_set = set(patient_hpo_ids)
     results = [] # store similarity results in a list
@@ -81,27 +79,27 @@ async def compute_similarity_scores(
         score = calculate_jaccard_index(patient_set, disease_set)
         print(f"DEBUG: mondo_id={mondo_id}, cosine_scores.get(cosine_score)={cosine_scores.get(mondo_id)}")
 
-        results.append(SimilarityScoreResult(
-            disease_name=disease_names.get(mondo_id, "Unknown"),
-            mondo_id=mondo_id,
-            jaccard_similarity_score=score,
-            cosine_similarity_score=cosine_scores.get(mondo_id
-        )))
+        results.append({
+            "disease_name":disease_names.get(mondo_id, "Unknown"),
+            "mondo_id":mondo_id,
+            "jaccard_similarity_score":score,
+            "cosine_similarity_score":cosine_scores.get(mondo_id)
+        })
 
         print(f"[DEBUG] Total diseases scored: {len(results)}")
-        print("Disease names scored:", [r.disease_name for r in results])
+        print("Disease names scored:", [r["disease_name"] for r in results])
 
-    return sorted(results, key=lambda x: x.jaccard_similarity_score, reverse=True)[:9] #sort  jaccard index score (only) in descending order
+    return sorted(results, key=lambda x: x["jaccard_similarity_score"], reverse=True)[:9]
 
 
 # save final prioritised list of candidate diseases
 # @lru_cache
-async def save_agent_results(results: List[SimilarityScoreResult], phenopacket_id: str, output_dir: Path = Path("agent_result")) -> None:
+async def save_agent_results(results: List[dict], phenopacket_id: str, output_dir: Path = Path("agent_results")) -> None:
     """
     Save final list of ranked disease to agent_results folder
 
     Args:
-        results: List of SimilarityScoreResult objects in descending order of similarity score
+        results: List of dicts representing similarity scores.
         output_dir: Path to output (agent_results)  folder
         phenopacket_id: patient identifier that is used to name the tsv file.
     """
@@ -119,7 +117,8 @@ async def save_agent_results(results: List[SimilarityScoreResult], phenopacket_i
 
             for rank, result in enumerate(results, start=1):
                 score = round(1 / rank, 4)
-                writer.writerow([rank, score, result.disease_name, result.mondo_id])
+                writer.writerow([rank, score, result["disease_name"], result["mondo_id"]])
+
 
         print(f"[SUCCESS] Results successfully saved to: {output_path.name}")
     except IOError as e:
