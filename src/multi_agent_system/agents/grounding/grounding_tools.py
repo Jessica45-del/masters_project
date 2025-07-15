@@ -1,10 +1,9 @@
-
+"""Tools for Grounding agent"""
+import asyncio
 from functools import lru_cache
 from typing import List, Any
 from oaklib import get_adapter
 from oaklib.implementations import MonarchImplementation
-
-from multi_agent_system.agents.breakdown.breakdown_tools import InitialDiagnosisResult
 from multi_agent_system.utils.grounding_utils import cosine_similarity
 
 
@@ -13,7 +12,9 @@ from pydantic import BaseModel, Field
 class GroundedDiseaseResult(BaseModel):
     disease_name: str = Field(..., description=" (Initial) Original disease label from breakdown agent")
     mondo_id: str | None = Field(None, description="Grounded MONDO ID, or None if not found")
-    phenotypes:list = Field(default_factory=list, description="Phenotype/HPO association")
+    phenotypes:List[str] = Field(  # Store as list of strings
+        default_factory=list,
+        description= "List of HPO IDs associated with the disease")
     cosine_score: float | None = Field(None, description="Cosine similarity score")
 
 #reduce threshold
@@ -41,6 +42,8 @@ async def ground_diseases(labels: List[str] ) -> list[GroundedDiseaseResult]:
         A list of GroundedDisease entries with MONDO IDs or fallbacks
     """
     results = [] # collect grounded disease results with MONDO IDs
+
+
     for label in labels:
         grounding = await find_mondo_id(label)
         print(f"\n[DEBUG] Grounding result for '{label}': {grounding}")

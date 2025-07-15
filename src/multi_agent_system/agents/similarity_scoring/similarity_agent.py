@@ -9,7 +9,7 @@ from pydantic_ai.providers.deepseek import DeepSeekProvider
 from multi_agent_system.agents.similarity_scoring.similarity_config import get_config
 from multi_agent_system.agents.similarity_scoring.similarity_tools import (
     compute_similarity_scores,
-    save_agent_results,
+    SimilarityScoreResult, SimilarityAgentOutput, save_agent_results,
 
 )
 # Load configuration
@@ -21,55 +21,67 @@ model = OpenAIModel(
     provider=DeepSeekProvider(api_key=config.api_key),
 )
 
-
-SIMILARITY_SYSTEM_PROMPT = (
+SIMILARITY_SYSTEM_PROMPT=(
     """
-    You are an assistant that specializes in rare disease similarity scoring and diagnosis.
-    You task is to compute similarity between a patient's observed phenotypes (HPO IDs) 
-    and disease candidate phenotype profiles,then return a prioritized list of the 9 most similar diseases in TSV format.
-    You will receive:
-
-    - `patient_hpo_ids`: a list of HPO term IDs for the patient.
-    - `disease_hpo_map`: a dictionary mapping MONDO IDs to a list of HPO term IDs describing the disease.
-    - `disease_names`: a dictionary mapping MONDO IDs to readable disease names.
-    - `cosine_scores`: (optional) dictionary mapping MONDO IDs to cosine similarity scores.
-    - `phenopacket_id`: the ID of the patient (used to name the output file).
-
-    This is provided as arguments. You do not need to explicitly specify this argument.
-
-
-    WORKFLOW- You MUST follow these steps in order:
-    1. Use the compute_similarity_scores function compute the jaccard similarity scores between patient HPO IDs 
-    and each HPO ID associated with the 9 candidate disease (or MONDO ID).
-    2. Based on the cosine similarity score and jaccard similarity scores, you must use your 
-    diagnostic reasoning to  rank the diseases from 1 (most likely) to 9 (least likely) 
-    to be associated with the patient phenotype profiles.
-    If both Jaccard and Cosine similarity scors are available, use both to inform ranking. 
-    If only Jaccard scores are available, you must using those alone.
-    You must ensure there are 9 candidate diseases from step 1 in the rank.
-    4. You must assign a final score as the 1/rank for each candidate disease. For example, Rank 1 = 1.0, Rank 2 = 0.5 etc.
-    5. You must call 'save_agent_results' function with the *exact list of dicts* returned from compute_similarity_scores 
-    without changing its structure.
+    You are an assistant that specializes in rare disease similarity scoring.
     
-    Output Format:
-    Again, You must return the output in TSV format using the save_agent_results function.
+    WORKFLOW:
+    1. You must  call the `compute_similarity_scores` function with:
+    - Patient HPO IDs
+    - Candidate diseases list
     
-    ## Important Notes
-    - You must call both `compute_similarity_scores` and `save_agent_results` functions to complete the objective.
-    - You must focus on accuracy over explanation.
-    -You must return a valid JSON response 
-    - You must not return duplicate candidate disease
-    - You must base rankings solely on similarity scores and clinical relevance.
-    - DO NOT include any explanations, markdown, confirmation messages, or extra text.
-    - Your response MUST NOT mention saving, success, or provide any instructions—
-"""
+    2. You must call the `save_agent_results` function with:
+    - the results from `compute_similarity_scores`
+    - the phenopacket ID
+    3. You must return 10 candidate diseases. 
+    
+
+    DO NOT:
+    - Add explanations
+    - Modify the input data
+    - Perform any other actions
+    
+    Call both functions exactly once, in order, and return the results from 'save_agents_results
+    """
 )
+
+# SIMILARITY_SYSTEM_PROMPT = (
+#         """
+#         You are an assistant that specializes in rare disease similarity scoring and rare disease diagnosis.
+#         Your task is to compute jaccard similarity between a patient's observed phenotypes (HPO IDs)
+#         and a list of candidate disease phenotype profiles (this is the HPO ID terms associated with a MONDO ID)
+#
+#
+#
+#         WORKFLOW — You MUST follow these steps in order:
+#
+#         1. You MUST call 'compute_similarity_score' to calculate jaccard similarity score.
+#         2. You MUST return the exact output from `compute_similarity_scores` based on the SimilarityAgentOutput object
+#         You must complete these two tasks before moving on to another task.
+#         3. Save the results using the save_agent_results function.
+#
+#
+#         Output Format:
+#         -You must return the original disease 'disease_name'
+#         -You must return the MONDO ID 'mondo_id
+#         -You must return the jaccard similarity score 'jaccard_similarity_score'
+#         -You must return cosine_similarity_score 'cosine_similarity_score' , this may be null
+#         -
+#
+#         IMPORTANT NOTE:
+#         - You MUST call `compute_similarity_scores` function
+#         - Do not include explanations, markdown formatting, or natural language.
+#         - You MUST NOT mention saving, success, or status messages
+#         - You MUST focus strictly on accurate scoring and ranking
+# """
+# )
 
 
 # Create the agent
 similarity_agent = Agent(
     model=model,
     system_prompt=SIMILARITY_SYSTEM_PROMPT,
+    output_type= SimilarityAgentOutput,
 )
 
 #Register tools
@@ -78,10 +90,3 @@ similarity_agent.tool_plain(save_agent_results)
 
 
 
-# """
-#
-#  5. After ranking, you must call the save_agent_results providing:
-#     - results: the ranked list of 9 SimilarityScoreResult objects
-#     - phenopacket_id: the phenopacket patient identifier.
-#     Use this when calling `save_agent_results`
-# """

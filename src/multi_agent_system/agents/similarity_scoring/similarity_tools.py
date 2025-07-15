@@ -2,10 +2,11 @@
 Tools for Similarity Scoring Agent
 """
 import csv
-#from functools import lru_cache
+from functools import lru_cache
 from pathlib import Path
-from typing import Set, List, Dict
-#from pydantic import BaseModel
+from typing import Set, List, Dict, Optional, Union, Any, Coroutine
+
+from pydantic import BaseModel
 from multi_agent_system.agents.similarity_scoring.similarity_config import get_config
 
 
@@ -14,11 +15,16 @@ from multi_agent_system.agents.similarity_scoring.similarity_config import get_c
 get_config()
 
 # Model output for similarity agent
-# class SimilarityScoreResult(BaseModel):
-#     disease_name:str # Candidate disease (from breakdown/grounding agent)")
-#     mondo_id:str | None # MONDO ID mapped to candidate disease
-#     jaccard_similarity_score:float # calculated similarity score using Jaccard index . Comparing patient HPOs and disease HPOs (from similarity scoring agent)
-#     cosine_similarity_score:float | None
+
+class SimilarityScoreResult(BaseModel):
+    disease_name: str
+    mondo_id: Optional[str]
+    jaccard_similarity_score: float
+    cosine_similarity_score: Optional[float]
+
+
+class SimilarityAgentOutput(BaseModel):
+    results: List[SimilarityScoreResult]
 
 # No need to re-extract HPO as this has already been done in cli, through extract hpo
 # terms function from utils.py
@@ -42,58 +48,79 @@ def calculate_jaccard_index(set1: Set[str], set2: Set[str]) -> float:
     intersection = len(set1 & set2)
     union = len(set1 | set2)
 
+    print(
+        f"[DEBUG] Jaccard calculation — Intersection: {intersection}, Union: {union}, Score: {intersection / union if union > 0 else 0.0}")
+
     return intersection / union if union > 0 else 0.0
 
 
 # compute jaccard index for patient hpo_ids and hpo_ids associated with MONDO IDs (candidate diseases)
+
 async def compute_similarity_scores(
     patient_hpo_ids: List[str],
-    disease_hpo_map: Dict[str, List[str]],
-    disease_names: Dict[str, str], #MONDO ID to disease name
-    cosine_scores: Dict[str, float | None] | None = None
-) -> List[dict]:
+    candidate_diseases: List[Dict[str,Any]], #more flexible typing
+) -> SimilarityAgentOutput:
 
     """
     Compute similarity scores between patient HPO IDs and each candidate disease (or MONDO ID) HPO IDs
 
     Args:
         patient_hpo_ids: List of patient HPO IDs
-        disease_names: Dictionary mapping MONDO IDs to lists of HPO term IDs for each disease.
-        disease_hpo_map: Dictionary mapping MONDO IDs to disease name (for readability)
-        cosine_scores: Dictionary of cosine similarity scores of diseases, where MONDO id was not found through basic search
+        candidate_diseases: List of dicts. Each include:
+            - disease_name: str
+            - mondo_id: str
+            - phenotypes: List [str]
+            - cosine_score: float |None
 
     Returns:
-        A list of candidate diseases with similarity scores
+        A list of disease ranked by Jaccard index/score, each as a dictionary
     """
-    print("[TOOL CALLED]Computing Similarity (JACCARD) Score!")
-    cosine_scores = cosine_scores or {}
+    print("[TOOL CALLED] Computing Jaccard Index!")
+
+
+
     patient_set = set(patient_hpo_ids)
-    results = [] # store similarity results in a list
 
-    # iterate of each disease
-    for mondo_id, disease_hpos in disease_hpo_map.items():
-        print("Candidate disease Mondo ID :", mondo_id) # mondo ID mapped to candidate disease
-        print("Associated HPO terms:", disease_hpos)
 
-        disease_set = set(disease_hpos)
-        score = calculate_jaccard_index(patient_set, disease_set)
-        print(f"DEBUG: mondo_id={mondo_id}, cosine_scores.get(cosine_score)={cosine_scores.get(mondo_id)}")
+    # ===== DEBUGG LOGGGING =====
+    print(f"[DEBUG] Patient HPO IDs received: {patient_set}")
+    if candidate_diseases:
+        first_candidate = candidate_diseases[0]
+        print(f"[DEBUG] First candidate disease: {first_candidate['disease_name']}")
+        print(f"[DEBUG] First candidate's HPOs: {set(first_candidate.get('phenotypes', []))}")
+    print(f"[DEBUG] Total candidates received: {len(candidate_diseases)}")
 
-        results.append({
-            "disease_name":disease_names.get(mondo_id, "Unknown"),
-            "mondo_id":mondo_id,
-            "jaccard_similarity_score":score,
-            "cosine_similarity_score":cosine_scores.get(mondo_id)
-        })
 
-        print(f"[DEBUG] Total diseases scored: {len(results)}")
-        print("Disease names scored:", [r["disease_name"] for r in results])
+    results = []
 
-    return sorted(results, key=lambda x: x["jaccard_similarity_score"], reverse=True)[:9]
+
+    for disease in candidate_diseases:
+        disease_id = disease.get("mondo_id") or disease["disease_name"] # get mondo id, fallback to disease name if not
+        disease_name = disease["disease_name"]
+        disease_phenotypes = disease.get("phenotypes", []) # get HPO terms associated with candidate disease
+        cosine_score= disease.get("cosine_score") # get cosine score, may be none if not provided
+
+        disease_set = set(disease_phenotypes)
+        jaccard_score = calculate_jaccard_index(patient_set,disease_set)
+
+        results.append(SimilarityScoreResult(
+            disease_name=disease_name,
+            mondo_id=disease.get("mondo_id"),
+            jaccard_similarity_score=jaccard_score,
+            cosine_similarity_score=cosine_score,
+
+        ))
+
+
+        print(f"[DEBUG] Processing disease: {disease['disease_name']}")
+        print(f"[DEBUG] Phenotypes: {disease.get('phenotypes')}")
+
+    return SimilarityAgentOutput(results=sorted(results, key=lambda x: x.jaccard_similarity_score, reverse=True)[:10])
 
 
 # save final prioritised list of candidate diseases
-# @lru_cache
+
+
 async def save_agent_results(results: List[dict], phenopacket_id: str, output_dir: Path = Path("agent_results")) -> None:
     """
     Save final list of ranked disease to agent_results folder
@@ -113,7 +140,7 @@ async def save_agent_results(results: List[dict], phenopacket_id: str, output_di
     try:
         with output_path.open("w", newline='', encoding='utf-8') as f:
             writer = csv.writer(f, delimiter='\t')
-            writer.writerow(["Rank", "Score", "Disease", "MONDO_ID"])
+            writer.writerow(["Rank", "Score", "Candidate Disease", "MONDO_ID"])
 
             for rank, result in enumerate(results, start=1):
                 score = round(1 / rank, 4)

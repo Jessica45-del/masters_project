@@ -14,6 +14,13 @@ class GroundingAgentConfig:
     # Max number of search results to return
     max_search_results: int = 100
 
+    # max number of retries
+    max_result_retries: int = 5
+
+    #timw inbetween retries
+    retry_delay = float = 2.0
+
+
     # Monarch adapter for retrieving disease knowledge
     monarch_adapter: Optional[MonarchImplementation] = None
 

@@ -49,8 +49,7 @@ GROUNDING_SYSTEM_PROMPT = (
 grounding_agent = Agent(
     model= model,
     system_prompt=GROUNDING_SYSTEM_PROMPT,
-    output_type= List[GroundedDiseaseResult] # prints complete list of results. do not remove
-
+    output_type= List[GroundedDiseaseResult], # prints complete list of results. do not remove
 )
 
 # Register tools
