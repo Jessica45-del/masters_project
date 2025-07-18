@@ -3,9 +3,12 @@ Similarity Scoring Agent.
 """
 from typing import List
 
+from lark.tools import options
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
+from pydantic_ai.settings import ModelSettings
+
 from multi_agent_system.agents.similarity_scoring.similarity_config import get_config
 from multi_agent_system.agents.similarity_scoring.similarity_tools import (
     compute_similarity_scores,
@@ -30,18 +33,22 @@ SIMILARITY_SYSTEM_PROMPT=(
     - Patient HPO IDs
     - Candidate diseases list
     
+    2. Review the cosine similarity and jaccard similarity score in SimilarityAgentOutput object.
+        - for each phenopacket ID consider you must use your own reasoning to rank the candidate list 
+    
     2. You must call the `save_agent_results` function with:
     - the results from `compute_similarity_scores`
     - the phenopacket ID
-    3. You must return 10 candidate diseases. 
+    3. You must return 9 candidate diseases. 
     
 
-    DO NOT:
-    - Add explanations
-    - Modify the input data
-    - Perform any other actions
-    
-    Call both functions exactly once, in order, and return the results from 'save_agents_results
+    IMPORTANT:
+    -You must only return a valid JSON block list of SimilarityAgentOutput objects.  
+     -Do not include explanations, markdown formatting, or natural language in the JSON response 
+    - DO NOT Add explanations
+    - DO NOT Modify the input data
+    - NOT Perform any other actions
+    - You MUST call both functions exactly once, in order, and return the results from 'save_agents_results
     """
 )
 
@@ -81,7 +88,9 @@ SIMILARITY_SYSTEM_PROMPT=(
 similarity_agent = Agent(
     model=model,
     system_prompt=SIMILARITY_SYSTEM_PROMPT,
+    retries=3,
     output_type= SimilarityAgentOutput,
+    model_settings=ModelSettings(max_tokens=4096)
 )
 
 #Register tools

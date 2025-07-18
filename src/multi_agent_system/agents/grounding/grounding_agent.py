@@ -3,9 +3,12 @@ AGENT 2: Grounding agent for diagnostic reasoning.
 """
 from typing import List
 
+from oaklib.cli import settings
 from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
+from pydantic_ai.settings import ModelSettings
+
 from multi_agent_system.agents.grounding.grounding_config import get_config
 from multi_agent_system.agents.grounding.grounding_tools import (
     find_mondo_id,
@@ -17,7 +20,9 @@ config = get_config()
 
 model = OpenAIModel(
    "deepseek-chat",
-   provider=DeepSeekProvider(api_key=config.api_key),
+    provider=DeepSeekProvider(api_key=config.api_key),
+
+
 )
 
 GROUNDING_SYSTEM_PROMPT = (
@@ -40,8 +45,8 @@ GROUNDING_SYSTEM_PROMPT = (
     IMPORTANT NOTES:
     You must call 'find_mondo_id' and 'retrieve_disease_knowledge for every disease. Do not skip any. 
     If no MONDO match is found, include `MONDO ID': null` and an empty list for 'phenotypes'
-    You must only return a valid JSON list of GroundedDiseaseResult objects.  
-    Do not include explanations, markdown formatting, or natural language. 
+    You must only return a valid JSON block list of GroundedDiseaseResult objects.  
+    Do not include explanations, markdown formatting, or natural language in the JSON response 
     """
 )
 
@@ -49,6 +54,8 @@ GROUNDING_SYSTEM_PROMPT = (
 grounding_agent = Agent(
     model= model,
     system_prompt=GROUNDING_SYSTEM_PROMPT,
+    retries=3,
+    model_settings=ModelSettings(max_tokens=7000),
     output_type= List[GroundedDiseaseResult], # prints complete list of results. do not remove
 )
 

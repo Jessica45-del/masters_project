@@ -6,6 +6,7 @@ from typing import List
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
 from pydantic_ai import Agent
+from pydantic_ai.settings import ModelSettings
 
 from multi_agent_system.agents.breakdown.breakdown_config import get_config
 from multi_agent_system.agents.breakdown.breakdown_tools import (
@@ -20,6 +21,7 @@ config = get_config()
 model = OpenAIModel(
    "deepseek-chat",
    provider=DeepSeekProvider(api_key=config.api_key),
+   settings = ModelSettings(max_tokens=4096)
 )
 
 
@@ -51,7 +53,9 @@ IMPORTANT NOTES:
 breakdown_agent = Agent(
    model= model,
    system_prompt=BREAKDOWN_SYSTEM_PROMPT,
-   output_type=InitialDiagnosisResult
+   retries=3,
+   model_settings=ModelSettings(max_tokens=600),
+   output_type=InitialDiagnosisResult,
 )
 
 

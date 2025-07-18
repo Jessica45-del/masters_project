@@ -30,7 +30,7 @@ def get_embedding(label: str) -> np.ndarray:
     return embedding.astype("float32")
 
 # Use cosine similarity to find most likely MONDO ID match
-def cosine_similarity(label: str, k: int = 1, threshold: float = 0.75) -> dict:
+def cosine_similarity(label: str, k: int = 1, threshold: float = 0.60) -> dict:
     """ Similarity search using FAISS with cosine similarity
 
     Args:
