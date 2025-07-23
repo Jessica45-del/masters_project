@@ -4,7 +4,7 @@ AGENT 2: Grounding agent for diagnostic reasoning.
 from typing import List
 
 from oaklib.cli import settings
-from pydantic_ai import Agent
+from pydantic_ai import Agent, PromptedOutput
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
 from pydantic_ai.settings import ModelSettings
@@ -55,8 +55,7 @@ grounding_agent = Agent(
     model= model,
     system_prompt=GROUNDING_SYSTEM_PROMPT,
     retries=3,
-    model_settings=ModelSettings(max_tokens=7000),
-    output_type= List[GroundedDiseaseResult], # prints complete list of results. do not remove
+    output_type=List[GroundedDiseaseResult], # prints complete list of results. do not remove
 )
 
 # Register tools

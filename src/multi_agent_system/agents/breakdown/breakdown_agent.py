@@ -5,7 +5,7 @@ from typing import List
 
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
-from pydantic_ai import Agent
+from pydantic_ai import Agent, PromptedOutput
 from pydantic_ai.settings import ModelSettings
 
 from multi_agent_system.agents.breakdown.breakdown_config import get_config
@@ -20,11 +20,8 @@ config = get_config()
 #Define LLM model
 model = OpenAIModel(
    "deepseek-chat",
-   provider=DeepSeekProvider(api_key=config.api_key),
-   settings = ModelSettings(max_tokens=4096)
+    provider=DeepSeekProvider(api_key=config.api_key),
 )
-
-
 
 
 BREAKDOWN_SYSTEM_PROMPT = ("""
@@ -36,7 +33,7 @@ WORKFLOW - You MUST follow these steps in order:
 1. Use the prepare_prompt function to render the HPO IDs and sex into a structured diagnostic prompt
 2. Based on the rendered prompt, analyze the phenotypic evidence and generate your diagnostic reasoning
 3. You must return a valid structured response that conforms exactly to the InitialDiagnosisResult model
-The workflow is only complete when you call the save_breakdown_result function.
+
 
 OUTPUT FORMAT:
 You must return the output based on the InitialDiagnosisResult model
@@ -54,7 +51,6 @@ breakdown_agent = Agent(
    model= model,
    system_prompt=BREAKDOWN_SYSTEM_PROMPT,
    retries=3,
-   model_settings=ModelSettings(max_tokens=600),
    output_type=InitialDiagnosisResult,
 )
 

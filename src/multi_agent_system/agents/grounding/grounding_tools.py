@@ -119,19 +119,19 @@ async def find_mondo_id(label: str) -> Dict[str, Any]:
         raise ModelRetry(error_msg) from e
 
 
-async def find_disease_knowledge(mondo_id: str, limit: int = 80) -> List[dict]:
+
+async def find_disease_knowledge(mondo_id: str, limit: int = 80) -> List[str]:
     """"
-Retrieve disease knowledge for a given MONDO ID.
+    Retrieve disease knowledge for a given MONDO ID.
 
 
-Arg:
-   mondo_id: The MONDO ID to retrieve knowledge
+    Arg:
+       mondo_id: The MONDO ID to retrieve knowledge
 
 
-Returns:
-   List of dictionaries with HPO terms and other disease associated metadata
-"""
-
+    Returns:
+       List of dictionaries with HPO terms and other disease associated metadata
+    """
     try:
         print(f"Retrieve disease knowledge for {mondo_id}")
         adapter = MonarchImplementation()
@@ -142,12 +142,69 @@ Returns:
             if i >= limit:
                 break
             if assoc.object:
-                results.append({
-                    "mondo_id": mondo_id,
-                    "hpo_id": assoc.object,
-                })
+                results.append(assoc.object)
         return results
     except Exception as e:
         error_msg = f"Failed to retrieve disease knowledge for {mondo_id}: {e}"
         print(f"[ERROR] {error_msg}")
         raise ModelRetry(error_msg) from e
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# async def find_disease_knowledge(mondo_id: str, limit: int = 80) -> List[dict]:
+#     """"
+# Retrieve disease knowledge for a given MONDO ID.
+#
+#
+# Arg:
+#    mondo_id: The MONDO ID to retrieve knowledge
+#
+#
+# Returns:
+#    List of dictionaries with HPO terms and other disease associated metadata
+# """
+#
+#     try:
+#         print(f"Retrieve disease knowledge for {mondo_id}")
+#         adapter = MonarchImplementation()
+#         results = []
+#         disease_association = adapter.associations(subjects=[mondo_id])
+#
+#         for i, assoc in enumerate(disease_association):
+#             if i >= limit:
+#                 break
+#             if assoc.object:
+#                 results.append({
+#                     "mondo_id": mondo_id,
+#                     "hpo_id": assoc.object,
+#                 })
+#         return results
+#     except Exception as e:
+#         error_msg = f"Failed to retrieve disease knowledge for {mondo_id}: {e}"
+#         print(f"[ERROR] {error_msg}")
+#         raise ModelRetry(error_msg) from e
+
+
+
+
+
+
+

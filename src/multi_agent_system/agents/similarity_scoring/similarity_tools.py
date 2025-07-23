@@ -18,7 +18,6 @@ class SimilarityScoreResult(BaseModel):
 class SimilarityAgentOutput(BaseModel):
     results: List[SimilarityScoreResult]
 
-
 def calculate_jaccard_index(set1: Set[str], set2: Set[str]) -> float:
     """
        Calculate Jaccard similarity index between two sets.
@@ -53,21 +52,6 @@ async def compute_similarity_scores(
         patient_hpo_ids: List[str],
         candidate_diseases: List[Dict[str, Any]],
 ) -> SimilarityAgentOutput:
-    """
-    Compute similarity scores between patient HPO IDs and each candidate disease (or MONDO ID) HPO IDs
-
-    Args:
-        patient_hpo_ids: List of patient HPO IDs
-        candidate_diseases: List of dicts. Each include:
-            - disease_name: str
-            - mondo_id: str
-            - phenotypes: List [str]
-            - cosine_score: float |None
-
-    Returns:
-        A list of disease ranked by Jaccard index/score, each as a dictionary
-    """
-
     try:
         print("[TOOL CALLED] Computing Jaccard Index!")
         patient_set = set(patient_hpo_ids)
@@ -75,25 +59,32 @@ async def compute_similarity_scores(
 
         for disease in candidate_diseases:
             try:
-                disease_id = disease.get("mondo_id") or disease["disease_name"]
                 disease_name = disease["disease_name"]
-                disease_phenotypes = disease.get("phenotypes", [])
+                mondo_id = disease.get("mondo_id")
+                raw_phenotypes = disease.get("phenotypes", [])
                 cosine_score = disease.get("cosine_score")
 
-                disease_set = set(disease_phenotypes)
+                # Handle different phenotype types
+                if isinstance(raw_phenotypes, set):
+                    phenotypes = list(raw_phenotypes)  # Convert set to list
+                elif isinstance(raw_phenotypes, str):
+                    phenotypes = [raw_phenotypes]  # Wrap string in list
+                else:
+                    phenotypes = raw_phenotypes  # Assume it's already a list
+
+                disease_set = set(phenotypes)  # Now safe
                 jaccard_score = calculate_jaccard_index(patient_set, disease_set)
 
                 results.append(SimilarityScoreResult(
                     disease_name=disease_name,
-                    mondo_id=disease.get("mondo_id"),
+                    mondo_id=mondo_id,
                     jaccard_similarity_score=jaccard_score,
                     cosine_similarity_score=cosine_score,
                 ))
             except Exception as e:
                 print(f"[ERROR] Failed to process disease '{disease.get('disease_name', 'unknown')}': {e}")
 
-        sorted_results = sorted(results, key=lambda x: x.jaccard_similarity_score, reverse=True)[:10]
-        return SimilarityAgentOutput(results=sorted_results)
+        return SimilarityAgentOutput(results=results)
     except Exception as e:
         error_msg = f"Failed to compute similarity scores: {e}"
         print(f"[CRITICAL] {error_msg}")
@@ -138,3 +129,60 @@ async def save_agent_results(results: List[dict], phenopacket_id: str,
         error_msg = f"Failed to save agent results: {e}"
         print(f"[CRITICAL] {error_msg}")
         raise ModelRetry(error_msg) from e
+
+
+
+
+
+
+#
+# async def compute_similarity_scores(
+#         patient_hpo_ids: List[str],
+#         candidate_diseases: List[Dict[str, Any]],
+# ) -> SimilarityAgentOutput:
+#     """
+#     Compute similarity scores between patient HPO IDs and each candidate disease (or MONDO ID) HPO IDs
+#
+#     Args:
+#         patient_hpo_ids: List of patient HPO IDs
+#         candidate_diseases: List of dicts. Each include:
+#             - disease_name: str
+#             - mondo_id: str
+#             - phenotypes: List [str]
+#             - cosine_score: float |None
+#
+#     Returns:
+#         A list of disease ranked by Jaccard index/score, each as a dictionary
+#     """
+#
+#     try:
+#         print("[TOOL CALLED] Computing Jaccard Index!")
+#         patient_set = set(patient_hpo_ids)
+#         results = []
+#
+#         for disease in candidate_diseases:
+#             try:
+#                 disease_id = disease.get("mondo_id") or disease["disease_name"]
+#                 disease_name = disease["disease_name"]
+#                 disease_phenotypes = disease.get("phenotypes", [])
+#                 cosine_score = disease.get("cosine_score")
+#
+#                 disease_set = set(disease_phenotypes)
+#                 jaccard_score = calculate_jaccard_index(patient_set, disease_set)
+#
+#                 results.append(SimilarityScoreResult(
+#                     disease_name=disease_name,
+#                     mondo_id=disease.get("mondo_id"),
+#                     jaccard_similarity_score=jaccard_score,
+#                     cosine_similarity_score=cosine_score,
+#                 ))
+#             except Exception as e:
+#                 print(f"[ERROR] Failed to process disease '{disease.get('disease_name', 'unknown')}': {e}")
+#
+#         # sorted_results = sorted(results, key=lambda x: x.jaccard_similarity_score, reverse=True)[:10]
+#
+#         return SimilarityAgentOutput(results=results)
+#     except Exception as e:
+#         error_msg = f"Failed to compute similarity scores: {e}"
+#         print(f"[CRITICAL] {error_msg}")
+#         raise ModelRetry(error_msg) from e

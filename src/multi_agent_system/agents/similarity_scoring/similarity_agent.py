@@ -4,7 +4,7 @@ Similarity Scoring Agent.
 from typing import List
 
 from lark.tools import options
-from pydantic_ai import Agent
+from pydantic_ai import Agent, PromptedOutput
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
 from pydantic_ai.settings import ModelSettings
@@ -88,9 +88,8 @@ SIMILARITY_SYSTEM_PROMPT=(
 similarity_agent = Agent(
     model=model,
     system_prompt=SIMILARITY_SYSTEM_PROMPT,
-    retries=3,
+    retries=5,
     output_type= SimilarityAgentOutput,
-    model_settings=ModelSettings(max_tokens=4096)
 )
 
 #Register tools

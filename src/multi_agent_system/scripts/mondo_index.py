@@ -17,7 +17,7 @@ output_dir.mkdir(parents=True, exist_ok=True)
 
 
 # embedding model
-model = SentenceTransformer("nomic-ai/nomic-embed-text-v1",  trust_remote_code=True) #nomic
+model = SentenceTransformer("nomic-ai/nomic-embed-text-v1") #nomic
 
 # load mondo db
 adapter = get_adapter("sqlite:obo:mondo")
