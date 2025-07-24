@@ -1,13 +1,11 @@
 """
 Similarity Scoring Agent.
 """
-from typing import List
 
-from lark.tools import options
 from pydantic_ai import Agent, PromptedOutput
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
-from pydantic_ai.settings import ModelSettings
+
 
 from multi_agent_system.agents.similarity_scoring.similarity_config import get_config
 from multi_agent_system.agents.similarity_scoring.similarity_tools import (
