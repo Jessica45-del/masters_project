@@ -10,7 +10,7 @@ from pydantic_ai.providers.deepseek import DeepSeekProvider
 from multi_agent_system.agents.similarity_scoring.similarity_config import get_config
 from multi_agent_system.agents.similarity_scoring.similarity_tools import (
     compute_similarity_scores,
-    SimilarityScoreResult, SimilarityAgentOutput, save_agent_results,
+    SimilarityAgentOutput, save_agent_results,
 
 )
 # Load configuration
