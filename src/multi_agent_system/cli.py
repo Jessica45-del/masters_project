@@ -12,7 +12,7 @@ from multi_agent_system.utils.batching_utils import calculate_batch_size
 from multi_agent_system.utils.utils import extract_hpo_ids_and_sex
 
 
-#  poetry run agents run_pipeline --phenopacket-dir multi_agent_system/phenopackets
+#  poetry run agents run_pipeline --phenopacket-dir phenopackets
 
 
 @click.group()

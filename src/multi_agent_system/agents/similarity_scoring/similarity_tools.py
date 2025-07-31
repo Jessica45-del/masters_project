@@ -92,7 +92,7 @@ async def compute_similarity_scores(
 
 
 async def save_agent_results(results: List[dict], phenopacket_id: str,
-                             output_dir: Path = Path("agent_results")) -> None:
+                             output_dir: Path = Path("raw_results")) -> None:
     """
       Save final list of ranked disease to agent_results folder
 
