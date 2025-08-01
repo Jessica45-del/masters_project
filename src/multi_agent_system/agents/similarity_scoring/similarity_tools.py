@@ -111,7 +111,7 @@ async def save_agent_results(results: List[dict], phenopacket_id: str,
         try:
             with output_path.open("w", newline='', encoding='utf-8') as f:
                 writer = csv.writer(f, delimiter='\t')
-                writer.writerow(["Rank", "Score", "Candidate Disease", "MONDO_ID"])
+                writer.writerow(["rank", "score", "candidate disease", "disease_identifier"])
 
                 for rank, result in enumerate(results, start=1):
                     try:

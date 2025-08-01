@@ -12,7 +12,7 @@ import json
 import numpy as np
 
 # define output directory for index files
-output_dir = Path("src/multi_agent_system/utils/data")
+output_dir = Path("src/multi_agent_system_2/utils/data")
 output_dir.mkdir(parents=True, exist_ok=True)
 
 

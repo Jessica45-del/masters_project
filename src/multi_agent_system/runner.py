@@ -155,9 +155,11 @@ class AgentPhEvalRunner(PhEvalRunner):
 
     def post_process(self):
         """Post Process."""
+        print("post processing agent results")
 
-        # post_process_format(
-        #     agent_results=self.agent_results_dir,
-        #
-        # )
-        print("post processing")
+        post_process_format(
+            raw_results_dir=self.raw_results_dir,
+            output_dir=self.output_dir,
+            phenopacket_dir=self.testdata_dir
+
+        )
