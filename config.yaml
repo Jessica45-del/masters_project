@@ -1,0 +1,6 @@
+tool: masters_project # name of runner or tool
+tool_version: 0.0.0 # the version of the  tool
+variant_analysis: False # whether the tool prioritises varaints
+gene_analysis: False # whether the outputs gene ranking
+disease_analysis: True # whether the tool predicts disease
+tool_specific_configuration_options:
