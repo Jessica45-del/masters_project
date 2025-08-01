@@ -1,0 +1,11 @@
+rank	score	candidate disease	disease_identifier
+1	1.0	Cornelia de Lange syndrome	MONDO:0016033
+2	0.5	CHARGE syndrome	MONDO:0008965
+3	0.3333	22q11.2 deletion syndrome	MONDO:0018923
+4	0.25	Rubinstein-Taybi syndrome	MONDO:0019188
+5	0.2	Pallister-Killian syndrome	MONDO:0007804
+6	0.1667	Fryns syndrome	MONDO:0009253
+7	0.1429	Smith-Lemli-Opitz syndrome	MONDO:0010035
+8	0.125	Kabuki syndrome	MONDO:0016512
+9	0.1111	Noonan syndrome	MONDO:0018997
+10	0.1	RERE-related disorders	
