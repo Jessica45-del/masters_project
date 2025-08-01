@@ -51,7 +51,7 @@ def post_process_format(raw_results_dir = Path, output_dir = Path, phenopacket_d
             results=pheval_agent_result,
             sort_order=SortOrder.DESCENDING,
             output_dir=output_dir,
-            result_path=result,
+            result_path=Path(str(result).replace("-agents", "")),
             phenopacket_dir=phenopacket_dir,
 
         )

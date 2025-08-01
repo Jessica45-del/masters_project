@@ -5,6 +5,8 @@ from pheval.runners.runner import PhEvalRunner
 import asyncio
 import json
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 from pheval.utils.file_utils import all_files
 from multi_agent_system.agents.breakdown.breakdown_agent import breakdown_agent
 from multi_agent_system.agents.grounding.grounding_agent import grounding_agent
@@ -120,11 +122,11 @@ class AgentPhEvalRunner(PhEvalRunner):
                 )
 
                 print("[DEBUG] Prompt length (chars):", len(similarity_input))
-                print("[DEBUG] Estimated tokens:", len(similarity_input) // 4)
+                # print("[DEBUG] Estimated tokens:", len(similarity_input) // 4)
 
                 results = await similarity_agent.run(similarity_input)
                 all_similarity_results.extend(results.output.results)
-                print(f"Tokens used: {results.usage().total_tokens}")
+                # print(f"Tokens used: {results.usage().total_tokens}")
                 await asyncio.sleep(0.5)
 
             sorted_results = sorted(
