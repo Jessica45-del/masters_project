@@ -5,8 +5,10 @@ from typing import List, Any, Dict
 from oaklib import get_adapter
 from oaklib.implementations import MonarchImplementation
 from multi_agent_system.utils.grounding_utils import cosine_similarity
+from oaklib.datamodels.search import SearchProperty, SearchConfiguration
 from pydantic_ai import ModelRetry
 from pydantic import BaseModel, Field
+
 
 
 class GroundedDiseaseResult(BaseModel):
@@ -101,8 +103,10 @@ async def find_mondo_id(label: str) -> Dict[str, Any]:
         adapter = get_mondo_adapter()
 
         try:
-            results = list(adapter.basic_search(label))
-            mondo_results = [r for r in results if str(r).startswith("MONDO:")]
+
+            config = SearchConfiguration(properties=[SearchProperty.ALIAS])
+            mondo_results = list(adapter.basic_search(label, config=config))
+
 
             if mondo_results:
                 hit = mondo_results[0]
@@ -111,7 +115,7 @@ async def find_mondo_id(label: str) -> Dict[str, Any]:
         except Exception as e:
             print(f"[WARNING] Exact search failed for '{label}': {e}")
 
-        # Fallback to cosine similarity
+        #Fallback to cosine similarity
         return cosine_similarity(label)
     except Exception as e:
         error_msg = f"Failed to find MONDO ID for '{label}': {e}"
@@ -148,62 +152,6 @@ async def find_disease_knowledge(mondo_id: str, limit: int = 80) -> List[str]:
         error_msg = f"Failed to retrieve disease knowledge for {mondo_id}: {e}"
         print(f"[ERROR] {error_msg}")
         raise ModelRetry(error_msg) from e
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# async def find_disease_knowledge(mondo_id: str, limit: int = 80) -> List[dict]:
-#     """"
-# Retrieve disease knowledge for a given MONDO ID.
-#
-#
-# Arg:
-#    mondo_id: The MONDO ID to retrieve knowledge
-#
-#
-# Returns:
-#    List of dictionaries with HPO terms and other disease associated metadata
-# """
-#
-#     try:
-#         print(f"Retrieve disease knowledge for {mondo_id}")
-#         adapter = MonarchImplementation()
-#         results = []
-#         disease_association = adapter.associations(subjects=[mondo_id])
-#
-#         for i, assoc in enumerate(disease_association):
-#             if i >= limit:
-#                 break
-#             if assoc.object:
-#                 results.append({
-#                     "mondo_id": mondo_id,
-#                     "hpo_id": assoc.object,
-#                 })
-#         return results
-#     except Exception as e:
-#         error_msg = f"Failed to retrieve disease knowledge for {mondo_id}: {e}"
-#         print(f"[ERROR] {error_msg}")
-#         raise ModelRetry(error_msg) from e
-
-
-
 
 
 

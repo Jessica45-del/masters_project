@@ -4,8 +4,9 @@ AGENT 1: Breakdown Agent for diagnostic reasoning
 from typing import List
 
 from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.providers.deepseek import DeepSeekProvider
-from pydantic_ai import Agent, PromptedOutput
+from pydantic_ai import Agent
 from pydantic_ai.settings import ModelSettings
 
 from multi_agent_system.agents.breakdown.breakdown_config import get_config
@@ -22,6 +23,7 @@ model = OpenAIModel(
    "deepseek-chat",
     provider=DeepSeekProvider(api_key=config.api_key),
 )
+
 
 
 BREAKDOWN_SYSTEM_PROMPT = ("""

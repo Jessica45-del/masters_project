@@ -10,9 +10,11 @@ from pathlib import Path
 class BreakdownAgentConfig(BaseSettings):
    """ Configuration settings for Breakdown Agent"""
    # Orchestration model (plan & tool dispatch)
-   model_name: str      = Field("deepseek-chat")
+   #model_name: str      = Field("deepseek-chat")
+   model_name:str       = Field("gpt-4o")
    temperature: float   = Field(0.2)
    api_key: str         = Field(default ="",alias="DEEPSEEK_API_KEY")
+   #api_key: str = Field(default="", alias="OPEN_API_KEY")
 
 
    # Jinja2 template for prompts

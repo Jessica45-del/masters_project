@@ -16,7 +16,8 @@ class SimilarityAgentConfig(BaseSettings):
     top_n_results: int = Field(5, description="Maximum number of top-scoring disease matches to return")
 
     # API key
-    api_key: str = Field(default="", alias="DEEPSEEK_API_KEY")
+    api_key: str = Field(default="", alias="DEEPSEEK_API_KEY") #deepseek
+    #api_key: str = Field(default="", alias="OPEN_API_KEY") #open ai
 
     model_config = SettingsConfigDict(
         env_prefix="",

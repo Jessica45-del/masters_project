@@ -5,7 +5,7 @@ Similarity Scoring Agent.
 from pydantic_ai import Agent, PromptedOutput
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
-
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from multi_agent_system.agents.similarity_scoring.similarity_config import get_config
 from multi_agent_system.agents.similarity_scoring.similarity_tools import (
@@ -49,37 +49,6 @@ SIMILARITY_SYSTEM_PROMPT=(
     - You MUST call both functions exactly once, in order, and return the results from 'save_agents_results
     """
 )
-
-# SIMILARITY_SYSTEM_PROMPT = (
-#         """
-#         You are an assistant that specializes in rare disease similarity scoring and rare disease diagnosis.
-#         Your task is to compute jaccard similarity between a patient's observed phenotypes (HPO IDs)
-#         and a list of candidate disease phenotype profiles (this is the HPO ID terms associated with a MONDO ID)
-#
-#
-#
-#         WORKFLOW — You MUST follow these steps in order:
-#
-#         1. You MUST call 'compute_similarity_score' to calculate jaccard similarity score.
-#         2. You MUST return the exact output from `compute_similarity_scores` based on the SimilarityAgentOutput object
-#         You must complete these two tasks before moving on to another task.
-#         3. Save the results using the save_agent_results function.
-#
-#
-#         Output Format:
-#         -You must return the original disease 'disease_name'
-#         -You must return the MONDO ID 'mondo_id
-#         -You must return the jaccard similarity score 'jaccard_similarity_score'
-#         -You must return cosine_similarity_score 'cosine_similarity_score' , this may be null
-#         -
-#
-#         IMPORTANT NOTE:
-#         - You MUST call `compute_similarity_scores` function
-#         - Do not include explanations, markdown formatting, or natural language.
-#         - You MUST NOT mention saving, success, or status messages
-#         - You MUST focus strictly on accurate scoring and ranking
-# """
-# )
 
 
 # Create the agent

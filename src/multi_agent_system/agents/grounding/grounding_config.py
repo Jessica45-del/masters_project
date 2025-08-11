@@ -24,6 +24,8 @@ class GroundingAgentConfig:
 
     #api key
     api_key: str = field(default_factory=lambda: os.environ.get("DEEPSEEK_API_KEY", ""))
+    #api_key: str = field(default_factory=lambda: os.environ.get("OPEN_API_KEY", ""))
+
 
     def __post_init__(self):
         """Initialize the Monarch adapter if not provided."""

@@ -1,5 +1,5 @@
 """Runner."""
-
+# pheval run -i . -t phenopackets -r agentphevalrunner -o result
 from dataclasses import dataclass
 from pheval.runners.runner import PhEvalRunner
 import asyncio
@@ -61,7 +61,7 @@ class AgentPhEvalRunner(PhEvalRunner):
                    """
             print(f"[INFO] Passing to breakdown agent: {breakdown_input}")
             breakdown_result = await breakdown_agent.run(breakdown_input)
-            print("Tokens used (if available):", breakdown_result.usage())
+            #print("Tokens used (if available):", breakdown_result.usage())
             await asyncio.sleep(0.5)
             print(f"[INFO] BREAKDOWN AGENT COMPLETE\n[RESULT]: {breakdown_result}\n")
 
@@ -74,7 +74,7 @@ class AgentPhEvalRunner(PhEvalRunner):
                 max_tokens=3500,  # Leave room for response
                 per_item_overhead=80  # Account for agent prompt overhead
             ))
-            print(f"Grounding batch size: {grounding_batch_size}, Total items: {len(candidate_disease_labels)}")
+            #print(f"Grounding batch size: {grounding_batch_size}, Total items: {len(candidate_disease_labels)}")
 
             # Process in dynamically sized batches
             grounding_results = []
@@ -104,7 +104,7 @@ class AgentPhEvalRunner(PhEvalRunner):
                 max_tokens=3500,
                 per_item_overhead=100  # Higher overhead due to phenotype data
             ))
-            print(f"Similarity batch size: {similarity_batch_size}, Total items: {len(candidate_diseases)}")
+            #print(f"Similarity batch size: {similarity_batch_size}, Total items: {len(candidate_diseases)}")
 
             # Process in batches
             all_similarity_results = []

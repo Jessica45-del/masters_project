@@ -3,10 +3,11 @@ AGENT 2: Grounding agent for diagnostic reasoning.
 """
 from typing import List
 
-from oaklib.cli import settings
+#from oaklib.cli import settings
 from pydantic_ai import Agent, PromptedOutput
 from pydantic_ai.models.openai import OpenAIModel
 from pydantic_ai.providers.deepseek import DeepSeekProvider
+from pydantic_ai.providers.openai import OpenAIProvider
 from pydantic_ai.settings import ModelSettings
 
 from multi_agent_system.agents.grounding.grounding_config import get_config
