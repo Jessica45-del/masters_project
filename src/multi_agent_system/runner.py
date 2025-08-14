@@ -1,11 +1,11 @@
 """Runner."""
-# pheval run -i . -t phenopackets -r agentphevalrunner -o result
+# pheval run -i . -t phenopackets -r agentphevalrunner -o results
 from dataclasses import dataclass
 from pheval.runners.runner import PhEvalRunner
 import asyncio
 import json
 from pathlib import Path
-from dotenv import load_dotenv # key
+from dotenv import load_dotenv # api key
 load_dotenv()
 from pheval.utils.file_utils import all_files
 from multi_agent_system.agents.breakdown.breakdown_agent import breakdown_agent
@@ -102,7 +102,7 @@ class AgentPhEvalRunner(PhEvalRunner):
             similarity_batch_size = min(5, calculate_batch_size(
                 candidate_diseases,
                 max_tokens=3500,
-                per_item_overhead=100  # Higher overhead due to phenotype data
+                per_item_overhead=100  # Higher overhead due to phenotype data_2
             ))
             #print(f"Similarity batch size: {similarity_batch_size}, Total items: {len(candidate_diseases)}")
 

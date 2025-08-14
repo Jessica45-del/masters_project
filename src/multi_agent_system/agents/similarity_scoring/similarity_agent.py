@@ -44,7 +44,7 @@ SIMILARITY_SYSTEM_PROMPT=(
     -You must only return a valid JSON block list of SimilarityAgentOutput objects.  
      -Do not include explanations, markdown formatting, or natural language in the JSON response 
     - DO NOT Add explanations
-    - DO NOT Modify the input data
+    - DO NOT Modify the input data_2
     - NOT Perform any other actions
     - You MUST call both functions exactly once, in order, and return the results from 'save_agents_results
     """

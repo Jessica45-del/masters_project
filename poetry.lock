@@ -3893,13 +3893,13 @@ test = ["pytest (>=7.0.0,<8.0.0)"]
 
 [[package]]
 name = "pheval"
-version = "0.6.2"
+version = "0.6.4"
 description = ""
 optional = false
 python-versions = "<4.0.0,>=3.10"
 files = [
-    {file = "pheval-0.6.2-py3-none-any.whl", hash = "sha256:0faac31249789b5e4e168c4ff739cce365ec52500ad00578f18a82ced1056551"},
-    {file = "pheval-0.6.2.tar.gz", hash = "sha256:1263ae82261c0bf0dee4cbb1a5e0a724923a03e9a8592cd647f67b658fcb19db"},
+    {file = "pheval-0.6.4-py3-none-any.whl", hash = "sha256:51ee9618bace6aa1f11812f85c3062162e486cbf7219a616cc9ce7a84bee894f"},
+    {file = "pheval-0.6.4.tar.gz", hash = "sha256:fe91069717f85213692d0f8a032181fd3f97e4cd8c5d8e0ec3a97f003fff3d09"},
 ]
 
 [package.dependencies]

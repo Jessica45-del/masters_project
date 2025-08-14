@@ -120,6 +120,7 @@ async def save_agent_results(results: List[dict], phenopacket_id: str,
                         writer.writerow([rank, score, result["disease_name"], result["mondo_id"]])
                     except Exception as e:
                         print(f"[ERROR] Failed to write result row {rank}: {e}")
+
         except Exception as e:
             error_msg = f"File operation failed for {output_path}: {e}"
             print(f"[ERROR] {error_msg}")

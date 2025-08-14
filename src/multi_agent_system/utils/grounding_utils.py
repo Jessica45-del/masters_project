@@ -5,7 +5,7 @@ from pathlib import Path
 from sentence_transformers import SentenceTransformer
 
 # Define paths
-BASE_DIR = Path(__file__).parent / "data"
+BASE_DIR = Path(__file__).parent / "data_2"
 INDEX_PATH = BASE_DIR / "mondo_faiss.index"
 LABELS_PATH = BASE_DIR / "mondo_labels.json"
 IDS_PATH = BASE_DIR / "mondo_ids.json"
@@ -30,7 +30,7 @@ def get_embedding(label: str) -> np.ndarray:
     return embedding.astype("float32")
 
 # Use cosine similarity to find most likely MONDO ID match
-def cosine_similarity(label: str, k: int = 1, threshold: float = 0.60) -> dict:
+def cosine_similarity(label: str, k: int = 1, threshold: float = 0.899) -> dict:
     """ Similarity search using FAISS with cosine similarity
 
     Args:
@@ -68,8 +68,8 @@ def cosine_similarity(label: str, k: int = 1, threshold: float = 0.60) -> dict:
 
     return {
         "label": label,
-        "id": "MONDO ID not found",
-
+        "id": None,  # return none if no MONDO ID is found
+        "cosine_score": float(cosine_score)
     }
 
 #TEST
