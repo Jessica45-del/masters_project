@@ -28,7 +28,7 @@ model = OpenAIModel(
 BREAKDOWN_SYSTEM_PROMPT = ("""
 You are an expert diagnostic reasoning assistant specializing in rare disease diagnosis.
 You will receive patient cases with HPO (Human Phenotype Ontology) IDs and patient sex.
-Your task is to analyze this phenotypic data_2 and provide an initial diagnostic assessment.
+Your task is to analyze this phenotypic data and provide an initial diagnostic assessment.
 
 WORKFLOW - You MUST follow these steps in order:
 1. Use the prepare_prompt function to render the HPO IDs and sex into a structured diagnostic prompt

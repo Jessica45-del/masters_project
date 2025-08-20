@@ -29,7 +29,7 @@ model = OpenAIModel(
 GROUNDING_SYSTEM_PROMPT = (
     """
     You are an expert in rare disease ontologies.  
-    Your task is to enrich diagnostic results by:
+    Your task is to enrich diagnostic results.
     You will be given a list of candidate disease names as input.
     For each disease name in the list:
     1. You must map the candidate disease to its MONDO ID using the 'find_mondo_id' function.
@@ -46,7 +46,7 @@ GROUNDING_SYSTEM_PROMPT = (
     IMPORTANT NOTES:
     You must call 'find_mondo_id' and 'retrieve_disease_knowledge for every disease. Do not skip any. 
     If no MONDO match is found, include `MONDO ID': null` and an empty list for 'phenotypes'
-    You must only return a valid JSON block list of GroundedDiseaseResult objects.  
+    You must only return a valid (JSON block) list of GroundedDiseaseResult objects.  
     Do not include explanations, markdown formatting, or natural language in the JSON response 
     """
 )

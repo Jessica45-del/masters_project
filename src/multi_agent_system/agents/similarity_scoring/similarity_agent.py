@@ -31,21 +31,21 @@ SIMILARITY_SYSTEM_PROMPT=(
     - Patient HPO IDs
     - Candidate diseases list
     
-    2. Review the cosine similarity and jaccard similarity score in SimilarityAgentOutput object.
+    2. Review the jaccard similarity score in SimilarityAgentOutput object.
         - for each phenopacket ID consider you must use your own reasoning to rank the candidate list 
     
-    2. You must call the `save_agent_results` function with:
-    - the results from `compute_similarity_scores`
-    - the phenopacket ID
-    3. You must return 9 candidate diseases. 
+    3. You must call the `save_agent_results` function with:
+    - the results from `compute_similarity_scores`,
+    - the phenopacket ID,
+    to generate a TSV containing a ranked list of the 10 candidate diseases.
     
 
     IMPORTANT:
-    -You must only return a valid JSON block list of SimilarityAgentOutput objects.  
+    -You must only return a valid (JSON block) list of SimilarityAgentOutput objects.  
      -Do not include explanations, markdown formatting, or natural language in the JSON response 
     - DO NOT Add explanations
-    - DO NOT Modify the input data_2
-    - NOT Perform any other actions
+    - DO NOT Modify the input data
+    - DO NOT Perform any other actions
     - You MUST call both functions exactly once, in order, and return the results from 'save_agents_results
     """
 )
