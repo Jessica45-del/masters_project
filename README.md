@@ -13,9 +13,5 @@ cd masters_project
 
 poetry shell
 
-poetry instll
-
-
-
-
-
+poetry install
+```
