@@ -8,9 +8,13 @@ This project explores the use of LLM agents for autonomous reasoning in rare dis
 Clone the masters_project repo and create a poetry environment
 ```
 git clone https://github.com/Jessica45-del/masters_project.git
+
 cd masters_project
+
 poetry shell
+
 poetry instll
+
 
 
 
