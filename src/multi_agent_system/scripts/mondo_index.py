@@ -3,8 +3,11 @@
 # Embed label
 # Search FAISS index
 # Return best match
+# This file creates the mondo index, label
+#must be updated to reflect mondo database updates
 
 from oaklib import get_adapter
+from oaklib.interfaces import BasicOntologyInterface
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 import faiss
@@ -12,12 +15,13 @@ import json
 import numpy as np
 
 # define output directory for index files
-output_dir = Path("src/multi_agent_system_2/utils/data")
+output_dir = Path("../utils/data_2")
 output_dir.mkdir(parents=True, exist_ok=True)
 
 
 # embedding model
-model = SentenceTransformer("nomic-ai/nomic-embed-text-v1") #nomic
+# for mac users remove trust_remote_code = True to run script
+model = SentenceTransformer("nomic-ai/nomic-embed-text-v1", trust_remote_code=True) #nomic
 
 # load mondo db
 adapter = get_adapter("sqlite:obo:mondo")
@@ -27,15 +31,22 @@ entities = list(adapter.entities())
 
 # Filter and retrieve MONDO disease labels
 
-mondo_labels = []
+mondo_labels = [] #i.e mondo terms
 mondo_ids = []
 
+#get primary label
 for entity in entities:
-    label = adapter.label(entity)
-    if label:
-        mondo_labels.append(label)
+    primary_label = adapter.label(entity)
+    if primary_label:
+        mondo_labels.append(primary_label)
         mondo_ids.append(entity)
 
+# get synoymns
+
+for syn in adapter.entity_aliases(entity) or []:
+    if syn != primary_label:
+        mondo_labels.append(syn)
+        mondo_ids.append(entity)
 # Produce embeddings for MONDO labels
 
 embeddings = model.encode(mondo_labels, show_progress_bar=True)
