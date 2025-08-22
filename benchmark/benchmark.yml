@@ -1,0 +1,34 @@
+benchmark_name: MultiAgent_Pheval_Benchmark
+runs:
+  - run_identifier: AgentPipeline
+    results_dir: /home/jessica/masters_project/results/Agents
+    phenopacket_dir: /home/jessica/masters_project/phenopackets
+    gene_analysis: False
+    variant_analysis: False
+    disease_analysis: True
+    threshold:
+    score_order: descending
+  - run_identifier: Exomiser
+    results_dir: /home/jessica/masters_project/results/Exomiser
+    phenopacket_dir: /home/jessica/masters_project/phenopackets
+    gene_analysis: False
+    variant_analysis: False
+    disease_analysis: True
+    threshold:
+    score_order: descending
+plot_customisation:
+  gene_plots:
+    plot_type: bar_cumulative
+    rank_plot_title:
+    roc_curve_title:
+    precision_recall_title:
+  disease_plots:
+    plot_type: bar_cumulative
+    rank_plot_title: "Cumulative Ranking Statistics for Multi-Agent Pipeline vs Exomiser"
+    roc_curve_title: "ROC Curve for Multi-Agent Pipeline vs Exomiser"
+    precision_recall_title: "Precision Recall Curve for Multi-Agent Pipeline vs Exomiser"
+  variant_plots:
+    plot_type: bar_cumulative
+    rank_plot_title:
+    roc_curve_title:
+    precision_recall_title:
