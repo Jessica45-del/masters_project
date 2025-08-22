@@ -16,3 +16,21 @@ poetry shell
 poetry install
 ```
 
+## Run Command
+
+input_dir - path to location of config.yaml file
+
+testdata-dir - path to phenopackets directory
+
+agentphevalrunner - custom runner name
+
+results_dir - path to results directory
+
+```
+pheval run -i /path/to/input_dir -t /path/to/testdatadir -r agentphevalrunner -o /path/to/resultsdir
+
+```
+
+
+
+
